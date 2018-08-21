@@ -71,7 +71,7 @@ void right()
 
 
 /*
- * work out number of bytes based on first byte 
+ * work out number of bytes based on first byte
  *
  * 1 byte utf8 starts 0xxxxxxx  00 - 7F : 000 - 127
  * 2 byte utf8 starts 110xxxxx  C0 - DF : 192 - 223
@@ -135,7 +135,7 @@ void forward_page()
 	while (0 < curbp->b_row--)
 		down();
 	/* this stops a reframe in display(), and epage is recalculated during display() */
-	curbp->b_epage = pos(curbp, curbp->b_ebuf); 
+	curbp->b_epage = pos(curbp, curbp->b_ebuf);
 }
 
 void backward_page()
@@ -176,7 +176,7 @@ void insert()
 	} else {
 		the_char[0] = *input == '\r' ? '\n' : *input;
 		the_char[1] = '\0'; /* null terminate */
-		*curbp->b_gap++ = the_char[0]; 
+		*curbp->b_gap++ = the_char[0];
 		curbp->b_point = pos(curbp, curbp->b_egap);
 		/* the point is set so that and undo will backspace over the char */
 		add_undo(curbp, UNDO_T_INSERT, curbp->b_point, the_char, NULL);
@@ -778,7 +778,7 @@ point_t get_point_max()
  * being sent to the current buffer which means the file
  * contents could get corrupted if you are running commands
  * on the buffers etc.
- * 
+ *
  * If the output is too big for the message line then send it to
  * a temp buffer called *list_output* and popup the window
  *
@@ -828,6 +828,31 @@ void eval_block()
 	reset_output_stream();
 }
 
+/* thanks atto :) */
+void kill_to_eol()
+{
+	if (curbp->b_point == pos(curbp, curbp->b_ebuf))
+		return; /* do nothing if at end of file */
+	if (*(ptr(curbp, curbp->b_point)) == 0xa) {
+		delete(); /* delete CR if at start of empty line */
+	} else {
+		curbp->b_mark = curbp->b_point;
+		lnend();
+		if (curbp->b_mark != curbp->b_point) copy_cut(TRUE);
+	}
+}
+
+void kill_to_bol()
+{
+	if (curbp->b_point == 0) {
+		return; /* do nothing if at beg of file */
+	} else {
+		curbp->b_mark = curbp->b_point;
+		lnbegin();
+		if (curbp->b_mark != curbp->b_point) copy_cut(TRUE);
+	}
+}
+
 /* this is called for every user key setup by a call to set_key */
 void user_func()
 {
@@ -850,6 +875,6 @@ void user_func()
 		strncpy(buf, output, 80);
 		buf[80] ='\0';
 		msg(buf);
-	}	
+	}
 	reset_output_stream();
 }

@@ -317,6 +317,8 @@ extern void i_set_mark();
 extern void i_shell_command();
 extern void kill_buffer();
 extern void kill_region();
+extern void kill_to_bol();
+extern void kill_to_eol();
 extern void left();
 extern void lnbegin();
 extern void lnend();

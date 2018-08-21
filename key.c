@@ -136,13 +136,13 @@ void setup_keys()
 	set_key_internal("c-n",     "next-line"             , "\x0E", down);
 	set_key_internal("c-p",     "previous-line"         , "\x10", up);
 	set_key_internal("c-h",     "backspace"             , "\x08", backspace);
-	set_key_internal("c-k",     "kill-to-eol"           , "\x0B", user_func);
+	set_key_internal("c-k",     "kill-to-eol"           , "\x0B", kill_to_eol);
 	set_key_internal("c-l",     "refresh"               , "\x0C", redraw);
 	set_key_internal("c-n",     "next-line"             , "\x0E", down);
 	set_key_internal("c-p",     "previous-line"         , "\x10", up);
 	set_key_internal("c-r",     "search-backward"       , "\x12", search);
 	set_key_internal("c-s",     "search-forward"        , "\x13", search);
-	set_key_internal("c-_",     "undo"                  , "\x1F", undo_command);
+	set_key_internal("c-u",     "kill-to-bol"           , "\x15", kill_to_bol);
 	set_key_internal("c-v",     "forward-page"          , "\x16", forward_page);
 	set_key_internal("c-w",     "kill-region"           , "\x17", kill_region);
 	set_key_internal("c-y",     "yank"                  , "\x19", yank);
@@ -150,7 +150,7 @@ void setup_keys()
         set_key_internal("esc-a",   "apropos"               , "\x1B\x61", apropos);
 	set_key_internal("esc-b",   "backward-word"         , "\x1B\x62", backward_word);
 	set_key_internal("esc-c",   "copy-region"           , "\x1B\x63", copy_region);
-	set_key_internal("esc-d",   "kill-to-eol"           , "\x1B\x64", user_func);
+	set_key_internal("esc-d",   "kill-to-eol"           , "\x1B\x64", kill_to_eol);
 	set_key_internal("esc-f",   "forward-word"          , "\x1B\x66", forward_word);
 	set_key_internal("esc-g",   "goto-line"             , "\x1B\x67", i_gotoline);
 	set_key_internal("esc-i",   "yank"                  , "\x1B\x69", yank);
@@ -209,6 +209,7 @@ void setup_keys()
 	set_key_internal("c-x `",     "user-func"             , "\x18\x60", user_func);
 	set_key_internal("c-space",   "set-mark"              , "\x00", i_set_mark);
 	set_key_internal("c-]",       "user-func"             , "\x1D", user_func);
+	set_key_internal("c-_",       "undo"                  , "\x1F", undo_command);
 	set_key_internal("resize",     "resize"               , "\x9A", resize_terminal);
 
 	register_command("describe-functions", describe_functions);
