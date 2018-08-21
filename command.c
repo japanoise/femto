@@ -63,11 +63,12 @@ void left()
 
 void right()
 {
-	int n = utf8_size(*ptr(curbp, curbp->b_point));
+	int n = utf8_size(*ptr(curbp,curbp->b_point));
 
 	while ((curbp->b_point < pos(curbp, curbp->b_ebuf)) && n-- > 0)
 		++curbp->b_point;
 }
+
 
 /*
  * work out number of bytes based on first byte 
@@ -80,19 +81,16 @@ void right()
  */
 int utf8_size(char_t c)
 {
-	if (c >= 192 && c < 224)
-		return 2;
-	if (c >= 224 && c < 240)
-		return 3;
-	if (c >= 240 && c < 248)
-		return 4;
-	return 1;		/* if in doubt it is 1 */
+	if (c >= 192 && c < 224) return 2;
+	if (c >= 224 && c < 240) return 3;
+	if (c >= 240 && c < 248) return 4;
+	return 1; /* if in doubt it is 1 */
 }
 
 int prev_utf8_char_size()
 {
 	int n;
-	for (n = 2; n < 5; n++)
+	for (n=2;n<5;n++)
 		if (-1 < curbp->b_point - n && (utf8_size(*(ptr(curbp, curbp->b_point - n))) == n))
 			return n;
 	return 1;
@@ -100,23 +98,22 @@ int prev_utf8_char_size()
 
 void up()
 {
-	curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point), curbp->b_col);
+	curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col);
 }
 
 void down()
 {
-	curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point), curbp->b_col);
+	curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col);
 }
 
 void lnbegin()
 {
-	curbp->b_point = segstart(curbp, lnstart(curbp, curbp->b_point), curbp->b_point);
+	curbp->b_point = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
 }
 
 void lnend()
 {
-	if (curbp->b_point == pos(curbp, curbp->b_ebuf))
-		return;		/* do nothing if EOF */
+        if (curbp->b_point == pos(curbp, curbp->b_ebuf)) return; /* do nothing if EOF */
 	curbp->b_point = dndn(curbp, curbp->b_point);
 	point_t p = curbp->b_point;
 	left();
@@ -138,7 +135,7 @@ void forward_page()
 	while (0 < curbp->b_row--)
 		down();
 	/* this stops a reframe in display(), and epage is recalculated during display() */
-	curbp->b_epage = pos(curbp, curbp->b_ebuf);
+	curbp->b_epage = pos(curbp, curbp->b_ebuf); 
 }
 
 void backward_page()
@@ -162,25 +159,24 @@ void forward_word()
 /* standard insert at the keyboard */
 void insert()
 {
-	char_t the_char[2];	/* the inserted char plus a null */
+	char_t the_char[2]; /* the inserted char plus a null */
 	assert(curbp->b_gap <= curbp->b_egap);
 
 	if (curbp->b_gap == curbp->b_egap && !growgap(curbp, CHUNK))
 		return;
 	curbp->b_point = movegap(curbp, curbp->b_point);
 
+
 	/* overwrite if mid line, not EOL or EOF, CR will insert as normal */
-	if ((curbp->b_flags & B_OVERWRITE) && *input != '\r'
-	    && *(ptr(curbp, curbp->b_point)) != '\n'
-	    && curbp->b_point < pos(curbp, curbp->b_ebuf)) {
+	if ((curbp->b_flags & B_OVERWRITE) && *input != '\r' && *(ptr(curbp, curbp->b_point)) != '\n' && curbp->b_point < pos(curbp,curbp->b_ebuf) ) {
 		*(ptr(curbp, curbp->b_point)) = *input;
 		if (curbp->b_point < pos(curbp, curbp->b_ebuf))
 			++curbp->b_point;
 		/* FIXME - overwite mode not handled properly for undo yet */
 	} else {
 		the_char[0] = *input == '\r' ? '\n' : *input;
-		the_char[1] = '\0';	/* null terminate */
-		*curbp->b_gap++ = the_char[0];
+		the_char[1] = '\0'; /* null terminate */
+		*curbp->b_gap++ = the_char[0]; 
 		curbp->b_point = pos(curbp, curbp->b_egap);
 		/* the point is set so that and undo will backspace over the char */
 		add_undo(curbp, UNDO_T_INSERT, curbp->b_point, the_char, NULL);
@@ -198,27 +194,26 @@ void insert()
  */
 void insert_at()
 {
-	char_t the_char[2];	/* the inserted char plus a null */
+	char_t the_char[2]; /* the inserted char plus a null */
 	assert(curbp->b_gap <= curbp->b_egap);
 
 	if (curbp->b_gap == curbp->b_egap && !growgap(curbp, CHUNK))
 		return;
 	curbp->b_point = movegap(curbp, curbp->b_point);
 
+
 	/* overwrite if mid line, not EOL or EOF, CR will insert as normal */
-	if ((curbp->b_flags & B_OVERWRITE) && *input != '\r'
-	    && *(ptr(curbp, curbp->b_point)) != '\n'
-	    && curbp->b_point < pos(curbp, curbp->b_ebuf)) {
+	if ((curbp->b_flags & B_OVERWRITE) && *input != '\r' && *(ptr(curbp, curbp->b_point)) != '\n' && curbp->b_point < pos(curbp,curbp->b_ebuf) ) {
 		*(ptr(curbp, curbp->b_point)) = *input;
 		if (curbp->b_point < pos(curbp, curbp->b_ebuf))
 			++curbp->b_point;
 		/* FIXME - overwite mode not handled properly for undo yet */
 	} else {
 		the_char[0] = *input == '\r' ? '\n' : *input;
-		the_char[1] = '\0';	/* null terminate */
+		the_char[1] = '\0'; /* null terminate */
 		*curbp->b_gap++ = the_char[0];
 		curbp->b_point = pos(curbp, curbp->b_egap);
-		curbp->b_point--;	/* move point back to where it was before, should always be safe */
+		curbp->b_point--; /* move point back to where it was before, should always be safe */
 		/* the point is set so that and undo will DELETE the char */
 		add_undo(curbp, UNDO_T_INSAT, curbp->b_point, the_char, NULL);
 	}
@@ -228,20 +223,20 @@ void insert_at()
 
 void backspace()
 {
-	char_t the_char[7];	/* the deleted char, allow 6 unsigned chars plus a null */
+	char_t the_char[7]; /* the deleted char, allow 6 unsigned chars plus a null */
 	int n = prev_utf8_char_size();
 
 	curbp->b_point = movegap(curbp, curbp->b_point);
 
-	if (curbp->b_buf < (curbp->b_gap - (n - 1))) {
-		curbp->b_gap -= n;	/* increase start of gap by size of char */
+	if (curbp->b_buf < (curbp->b_gap - (n - 1)) ) {
+		curbp->b_gap -= n; /* increase start of gap by size of char */
 		add_mode(curbp, B_MODIFIED);
 
 		/* record the backspaced chars in the undo structure */
 		memcpy(the_char, curbp->b_gap, n);
-		the_char[n] = '\0';	/* null terminate, the backspaced char(s) */
+		the_char[n] = '\0'; /* null terminate, the backspaced char(s) */
 		curbp->b_point = pos(curbp, curbp->b_egap);
-		/*debug("point after bs = %ld\n", curbp->b_point); */
+		//debug("point after bs = %ld\n", curbp->b_point);
 		add_undo(curbp, UNDO_T_BACKSPACE, curbp->b_point, the_char, NULL);
 	}
 
@@ -250,7 +245,7 @@ void backspace()
 
 void delete()
 {
-	char_t the_char[7];	/* the deleted char, allow 6 unsigned chars plus a null */
+	char_t the_char[7]; /* the deleted char, allow 6 unsigned chars plus a null */
 	int n;
 
 	curbp->b_point = movegap(curbp, curbp->b_point);
@@ -259,8 +254,8 @@ void delete()
 	if (curbp->b_egap < curbp->b_ebuf) {
 		/* record the deleted chars in the undo structure */
 		memcpy(the_char, curbp->b_egap, n);
-		the_char[n] = '\0';	/* null terminate, the deleted char(s) */
-		/*debug("deleted = '%s'\n", the_char); */
+		the_char[n] = '\0'; /* null terminate, the deleted char(s) */
+		//debug("deleted = '%s'\n", the_char);
 		curbp->b_egap += n;
 		curbp->b_point = pos(curbp, curbp->b_egap);
 		add_mode(curbp, B_MODIFIED);
@@ -272,7 +267,7 @@ void i_gotoline()
 {
 	int line;
 
-	if (getinput(m_goto, (char *)response_buf, STRBUF_S, F_CLEAR)) {
+	if (getinput(m_goto, (char*)response_buf, STRBUF_S, F_CLEAR)) {
 		line = atoi(response_buf);
 		goto_line(line);
 	}
@@ -295,13 +290,13 @@ int goto_line(int line)
 
 void insertfile()
 {
-	if (getfilename(str_insert_file, (char *)response_buf, NAME_MAX))
+	if (getfilename(str_insert_file, (char*) response_buf, NAME_MAX))
 		(void)insert_file(response_buf, TRUE);
 }
 
 void i_readfile()
 {
-	if (FALSE == getfilename(str_read, (char *)response_buf, NAME_MAX))
+	if (FALSE == getfilename(str_read, (char*)response_buf, NAME_MAX))
 		return;
 
 	readfile(response_buf);
@@ -310,7 +305,7 @@ void i_readfile()
 void readfile(char *fname)
 {
 	buffer_t *bp = find_buffer_by_fname(fname);
-	disassociate_b(curwp);	/* we are leaving the old buffer for a new one */
+	disassociate_b(curwp); /* we are leaving the old buffer for a new one */
 	curbp = bp;
 	associate_b2w(curbp, curwp);
 
@@ -348,11 +343,11 @@ char *rename_current_buffer(char *bname)
 void writefile()
 {
 	safe_strncpy(response_buf, curbp->b_fname, NAME_MAX);
-	if (getinput(str_write, (char *)response_buf, NAME_MAX, F_NONE)) {
+	if (getinput(str_write, (char*)response_buf, NAME_MAX, F_NONE)) {
 		if (save_buffer(curbp, response_buf) == TRUE) {
 			safe_strncpy(curbp->b_fname, response_buf, NAME_MAX);
-			/* FIXME - what if name already exists, in editor */
-			/* FIXME? - do we want to change the name of the buffer when we save_as ? */
+			// FIXME - what if name already exists, in editor
+			// FIXME? - do we want to change the name of the buffer when we save_as ?
 			make_buffer_name(curbp->b_bname, curbp->b_fname);
 		}
 	}
@@ -365,7 +360,7 @@ void kill_buffer()
 
 	/* do nothing if only buffer left is the scratch buffer */
 	if (bcount == 1 && 0 == strcmp(get_buffer_name(curbp), str_scratch))
-		return;
+              return;
 
 	if (!(curbp->b_flags & B_SPECIAL) && curbp->b_flags & B_MODIFIED) {
 		mvaddstr(MSGLINE, 0, str_notsaved);
@@ -401,8 +396,7 @@ void unmark()
 	curbp->b_mark = NOMARK;
 }
 
-void toggle_overwrite_mode()
-{
+void toggle_overwrite_mode() {
 	if (curbp->b_flags & B_OVERWRITE)
 		curbp->b_flags &= ~B_OVERWRITE;
 	else
@@ -423,17 +417,13 @@ int i_check_region()
 	return TRUE;
 }
 
-void copy_region()
-{
-	if (i_check_region() == FALSE)
-		return;
+void copy_region() {
+	if (i_check_region() == FALSE) return;
 	copy_cut(FALSE);
 }
 
-void kill_region()
-{
-	if (i_check_region() == FALSE)
-		return;
+void kill_region() {
+	if (i_check_region() == FALSE) return;
 	copy_cut(TRUE);
 }
 
@@ -450,29 +440,27 @@ void copy_cut(int cut)
 
 	if (curbp->b_point < curbp->b_mark) {
 		/* point above mark: move gap under point, region = mark - point */
-		(void)movegap(curbp, curbp->b_point);
+		(void) movegap(curbp, curbp->b_point);
 		/* moving the gap can impact the pointer so sure get the pointer after the move */
 		p = ptr(curbp, curbp->b_point);
 		nscrap = curbp->b_mark - curbp->b_point;
 	} else {
 		/* if point below mark: move gap under mark, region = point - mark */
-		(void)movegap(curbp, curbp->b_mark);
+		(void) movegap(curbp, curbp->b_mark);
 		/* moving the gap can impact the pointer so sure get the pointer after the move */
 		p = ptr(curbp, curbp->b_mark);
 		nscrap = curbp->b_point - curbp->b_mark;
 	}
-	if ((scrap = (char_t *) malloc(nscrap + 1)) == NULL) {
+	if ((scrap = (char_t*) malloc(nscrap + 1)) == NULL) {
 		msg(m_alloc);
 	} else {
-		(void)memcpy(scrap, p, nscrap * sizeof(char_t));
-		*(scrap + nscrap) = '\0';	/* null terminate for insert_string */
+		(void) memcpy(scrap, p, nscrap * sizeof (char_t));
+		*(scrap + nscrap) = '\0';  /* null terminate for insert_string */
 		if (cut) {
-			/*debug("CUT: pt=%ld nscrap=%d\n", curbp->b_point, nscrap); */
-			add_undo(curbp, UNDO_T_KILL,
-				 (curbp->b_point < curbp->b_mark ? curbp->b_point : curbp->b_mark),
-				 scrap, NULL);
-			curbp->b_egap += nscrap;	/* if cut expand gap down */
-			curbp->b_point = pos(curbp, curbp->b_egap);	/* set point to after region */
+			//debug("CUT: pt=%ld nscrap=%d\n", curbp->b_point, nscrap);
+			add_undo(curbp, UNDO_T_KILL, (curbp->b_point < curbp->b_mark ? curbp->b_point : curbp->b_mark), scrap, NULL);
+			curbp->b_egap += nscrap; /* if cut expand gap down */
+			curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
 			add_mode(curbp, B_MODIFIED);
 			msg(m_cut, nscrap);
 		} else {
@@ -487,8 +475,7 @@ char *get_clipboard()
 {
 	static char empty_string[] = "";
 
-	if (scrap == NULL)
-		return empty_string;
+	if (scrap == NULL) return empty_string;
 	return (char *)scrap;
 }
 
@@ -503,8 +490,7 @@ unsigned char *get_scrap()
  */
 void set_scrap(unsigned char *ptr)
 {
-	if (scrap != NULL)
-		free(scrap);
+	if (scrap != NULL) free(scrap);
 	assert(ptr != NULL);
 	scrap = ptr;
 }
@@ -524,9 +510,9 @@ void insert_string(char *str)
 		msg(m_empty);
 	} else if (len < curbp->b_egap - curbp->b_gap || growgap(curbp, len)) {
 		curbp->b_point = movegap(curbp, curbp->b_point);
-		/*debug("INS STR: pt=%ld len=%d\n", curbp->b_point, strlen((char *)str)); */
-		add_undo(curbp, UNDO_T_YANK, curbp->b_point, (char_t *) str, NULL);
-		memcpy(curbp->b_gap, str, len * sizeof(char_t));
+		//debug("INS STR: pt=%ld len=%d\n", curbp->b_point, strlen((char *)str));
+		add_undo(curbp, UNDO_T_YANK, curbp->b_point, (char_t *)str, NULL);
+		memcpy(curbp->b_gap, str, len * sizeof (char_t));
 		curbp->b_gap += len;
 		curbp->b_point = pos(curbp, curbp->b_egap);
 		add_mode(curbp, B_MODIFIED);
@@ -536,24 +522,23 @@ void insert_string(char *str)
 /*
  * append a string to the end of a buffer
  */
-void append_string(buffer_t * bp, char *str)
+void append_string(buffer_t *bp, char *str)
 {
 	int len = (str == NULL) ? 0 : strlen(str);
 
 	assert(bp != NULL);
-	if (len == 0)
-		return;
+	if (len == 0) return;
 
 	/* goto end of buffer */
 	bp->b_epage = bp->b_point = pos(bp, bp->b_ebuf);
 
 	if (len < bp->b_egap - bp->b_gap || growgap(bp, len)) {
 		bp->b_point = movegap(bp, bp->b_point);
-		memcpy(bp->b_gap, str, len * sizeof(char_t));
+		memcpy(bp->b_gap, str, len * sizeof (char_t));
 		bp->b_gap += len;
 		bp->b_point = pos(bp, bp->b_egap);
 		add_mode(curbp, B_MODIFIED);
-		bp->b_epage = bp->b_point = pos(bp, bp->b_ebuf);	/* goto end of buffer */
+		bp->b_epage = bp->b_point = pos(bp, bp->b_ebuf); /* goto end of buffer */
 
 		/* if window is displayed mark all windows for update */
 		if (bp->b_cnt > 0) {
@@ -591,17 +576,15 @@ void cursor_position()
 
 	if (curbp->b_point == end_p) {
 		msg(str_endpos, current, lastln,
-		    curbp->b_point,
-		    ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap)));
+			curbp->b_point, ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap)));
 	} else {
 		msg(str_pos, unctrl(*(ptr(curbp, curbp->b_point))), *(ptr(curbp, curbp->b_point)),
-		    current, lastln,
-		    curbp->b_point,
-		    ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap)));
+			current, lastln,
+			curbp->b_point, ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap)));
 	}
 }
 
-char *get_temp_file()
+char* get_temp_file()
 {
 	int result = 0;
 	static char temp_file[] = TEMPFILE;
@@ -609,7 +592,8 @@ char *get_temp_file()
 	strcpy(temp_file, TEMPFILE);
 	result = mkstemp(temp_file);
 
-	if (result == -1) {
+	if (result == -1)
+	{
 		printf("Failed to create temp file\n");
 		exit(1);
 	}
@@ -628,7 +612,7 @@ void match_parens()
 
 	char p = *ptr(bp, bp->b_point);
 
-	switch (p) {
+	switch(p) {
 	case '{':
 		match_paren_forwards(bp, '{', '}');
 		break;
@@ -653,7 +637,7 @@ void match_parens()
 	}
 }
 
-void match_paren_forwards(buffer_t * bp, char open_paren, char close_paren)
+void match_paren_forwards(buffer_t *bp, char open_paren, char close_paren)
 {
 	int lcount = 0;
 	int rcount = 0;
@@ -676,7 +660,7 @@ void match_paren_forwards(buffer_t * bp, char open_paren, char close_paren)
 	bp->b_paren = NOPAREN;
 }
 
-void match_paren_backwards(buffer_t * bp, char open_paren, char close_paren)
+void match_paren_backwards(buffer_t *bp, char open_paren, char close_paren)
 {
 	int lcount = 0;
 	int rcount = 0;
@@ -701,7 +685,7 @@ void match_paren_backwards(buffer_t * bp, char open_paren, char close_paren)
 
 void i_shell_command()
 {
-	if (getinput(str_shell_cmd, (char *)response_buf, NAME_MAX, F_CLEAR))
+	if (getinput(str_shell_cmd, (char*)response_buf, NAME_MAX, F_CLEAR))
 		shell_command(response_buf);
 }
 
@@ -712,18 +696,18 @@ void shell_command(char *command)
 	char *output_file = get_temp_file();
 
 	sprintf(sys_command, "%s > %s 2>&1", command, output_file);
-	/*debug("sys_command: '%s'\n", sys_command); */
+	//debug("sys_command: '%s'\n", sys_command);
 
 	if (0 != system(sys_command))
 		return;
 
 	bp = find_buffer(str_output, TRUE);
-	disassociate_b(curwp);	/* we are leaving the old buffer for a new one */
+	disassociate_b(curwp); /* we are leaving the old buffer for a new one */
 	curbp = bp;
 	associate_b2w(curbp, curwp);
 
 	e_load_file(output_file);
-	msg("");		/* clear the msg line, dont display temp filename */
+	msg(""); /* clear the msg line, dont display temp filename */
 	safe_strncpy(curbp->b_bname, str_output, NBUFN);
 }
 
@@ -766,8 +750,7 @@ char *get_char()
 
 void set_point(point_t p)
 {
-	if (p < 0 || p > pos(curbp, curbp->b_ebuf))
-		return;
+	if (p < 0 || p > pos(curbp, curbp->b_ebuf)) return;
 	curbp->b_point = p;
 }
 
@@ -865,8 +848,8 @@ void user_func()
 	if (NULL != strstr(output, "error:")) {
 		char buf[81];
 		strncpy(buf, output, 80);
-		buf[80] = '\0';
+		buf[80] ='\0';
 		msg(buf);
-	}
+	}	
 	reset_output_stream();
 }

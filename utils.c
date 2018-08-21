@@ -6,7 +6,9 @@
 #include <ctype.h>
 #include "header.h"
 
+
 extern int errno;
+
 
 /*
  * Take a file name, and fabricate a buffer name.
@@ -39,19 +41,19 @@ void make_buffer_name_uniq(char *bname)
 	basen[14] = '\0';
 	basen[15] = '\0';
 
-	while (TRUE) {
+	while(TRUE) {
 		sprintf(bufn, "%s%d", basen, num++);
-
+		
 		if (NULL == find_buffer(bufn, FALSE)) {
 			strcpy(bname, bufn);
 			return;
 		}
-		assert(num < 100);	/* fail after 100 */
+		assert(num < 100); /* fail after 100 */
 	}
 }
 
 /* replace control chars with spaces in string s */
-void remove_control_chars(char_t * s)
+void remove_control_chars(char_t *s)
 {
 	char_t *p = s;
 
@@ -66,5 +68,5 @@ void remove_control_chars(char_t * s)
 void safe_strncpy(char *dest, char *src, int nchars)
 {
 	strncpy(dest, src, nchars);
-	*(dest + nchars - 1) = '\0';	/* force null termination */
+	*(dest + nchars - 1) = '\0';  /* force null termination */
 }

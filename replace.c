@@ -10,18 +10,18 @@ void query_replace(void)
 	point_t l_point = -1;
 	point_t found;
 	char question[STRBUF_L];
-	int slen, rlen;		/* length of search and replace strings */
-	int numsub = 0;		/* number of substitutions */
+	int slen, rlen;   /* length of search and replace strings */
+	int numsub = 0;   /* number of substitutions */
 	int ask = TRUE;
 	int c;
 
 	searchtext[0] = '\0';
 	replace[0] = '\0';
 
-	if (!getinput(m_replace, (char *)searchtext, STRBUF_M, F_CLEAR))
+	if (!getinput(m_replace, (char*)searchtext, STRBUF_M, F_CLEAR))
 		return;
 
-	if (!getinput(m_with, (char *)replace, STRBUF_M, F_CLEAR))
+	if (!getinput(m_with, (char*)replace, STRBUF_M, F_CLEAR))
 		return;
 
 	slen = strlen(searchtext);
@@ -32,7 +32,7 @@ void query_replace(void)
 
 	/* scan through the file, from point */
 	numsub = 0;
-	while (TRUE) {
+	while(TRUE) {
 		found = search_forward(searchtext);
 
 		/* if not found set the point to the last point of replacement, or where we started */
@@ -49,34 +49,34 @@ void query_replace(void)
 			msg(question);
 			clrtoeol();
 
- qprompt:
+		qprompt:
 			display(curwp, TRUE);
 			c = getch();
 
 			switch (c) {
-			case 'y':	/* yes, substitute */
+			case 'y': /* yes, substitute */
 				break;
 
-			case 'n':	/* no, find next */
-				curbp->b_point = found;	/* set to end of search string */
+			case 'n': /* no, find next */
+				curbp->b_point = found; /* set to end of search string */
 				continue;
 
-			case '!':	/* yes/stop asking, do the lot */
+			case '!': /* yes/stop asking, do the lot */
 				ask = FALSE;
 				break;
 
-			case 0x1B:	/* esc */
-				flushinp();	/* discard any escape sequence without writing in buffer */
-			case 'q':	/* controlled exit */
+			case 0x1B: /* esc */
+				flushinp(); /* discard any escape sequence without writing in buffer */
+			case 'q': /* controlled exit */
 				return;
 
-			default:	/* help me */
+			default: /* help me */
 				msg(m_rephelp);
 				goto qprompt;
 			}
 		}
 
-		l_point = curbp->b_point;	/* save last point */
+		l_point = curbp->b_point; /* save last point */
 		replace_string(curbp, searchtext, replace, slen, rlen);
 		numsub++;
 	}
@@ -84,7 +84,7 @@ void query_replace(void)
 	msg("%d substitutions", numsub);
 }
 
-void replace_string(buffer_t * bp, char *s, char *r, int slen, int rlen)
+void replace_string(buffer_t *bp, char *s, char *r, int slen, int rlen)
 {
 	/*
 	 * we call this function with the point set at the start of the search string
@@ -109,9 +109,9 @@ void replace_string(buffer_t * bp, char *s, char *r, int slen, int rlen)
 	}
 
 	/* now just overwrite the chars at point in the buffer */
-	memcpy(ptr(bp, bp->b_point), r, rlen * sizeof(char_t));
+	memcpy(ptr(bp, bp->b_point), r, rlen * sizeof (char_t));
 	add_mode(bp, B_MODIFIED);
 
-	add_undo(curbp, UNDO_T_REPLACE, curbp->b_point, (char_t *) s, (char_t *) r);
-	curbp->b_point = found - (slen - rlen);	/* set point to end of replacement */
+	add_undo(curbp, UNDO_T_REPLACE, curbp->b_point, (char_t *)s, (char_t *)r);
+	curbp->b_point = found - (slen - rlen); /* set point to end of replacement */
 }

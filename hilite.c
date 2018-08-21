@@ -6,7 +6,7 @@ int state = ID_DEFAULT;
 int next_state = ID_DEFAULT;
 int skip_count = 0;
 
-char_t get_at(buffer_t * bp, point_t pt)
+char_t get_at(buffer_t *bp, point_t pt)
 {
 	return (*ptr(bp, pt));
 }
@@ -18,12 +18,11 @@ int is_symbol(char_t c)
 	register char_t *p = symbols;
 
 	for (p = symbols; *p != '\0'; p++)
-		if (*p == c)
-			return 1;
+		if (*p == c) return 1;
 	return 0;
 }
 
-void set_parse_state(buffer_t * bp, point_t pt)
+void set_parse_state(buffer_t *bp, point_t pt)
 {
 	register point_t po;
 
@@ -31,11 +30,11 @@ void set_parse_state(buffer_t * bp, point_t pt)
 	next_state = ID_DEFAULT;
 	skip_count = 0;
 
-	for (po = 0; po < pt; po++)
+	for (po =0; po < pt; po++)
 		parse_text(bp, po);
 }
 
-int parse_text(buffer_t * bp, point_t pt)
+int parse_text(buffer_t *bp, point_t pt)
 {
 	if (skip_count-- > 0)
 		return state;
