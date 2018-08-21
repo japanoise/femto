@@ -35,7 +35,7 @@ int mkstemp(char *);
 #define STRBUF_L        256
 #define STRBUF_M        64
 #define STRBUF_S        16
-#define NBUFN           17              /* size of buffer name 16 chars + null terminator */
+#define NBUFN           17	/* size of buffer name 16 chars + null terminator */
 #define MAX_KNAME       12
 #define MAX_KBYTES      12
 #define MAX_KFUNC       30
@@ -81,32 +81,31 @@ int mkstemp(char *);
 
 typedef unsigned char char_t;
 typedef long point_t;
-typedef void (*void_func)(void);
+typedef void (*void_func) (void);
 
 typedef enum {
 	B_MODIFIED = 0x01,
-	B_OVERWRITE = 0x02,		/* overwite mode */
-	B_SPECIAL = 0x04,		/* is a special buffer name of form '*name*' */
-	B_UNDO = 0x08,                  /* undo mode */
+	B_OVERWRITE = 0x02,	/* overwite mode */
+	B_SPECIAL = 0x04,	/* is a special buffer name of form '*name*' */
+	B_UNDO = 0x08,		/* undo mode */
 } buffer_flags_t;
 
-typedef struct string_list_t
-{
+typedef struct string_list_t {
 	struct string_list_t *next;
 	char *string;
 } string_list_t;
 
 typedef struct keymap_t {
-	char k_name[MAX_KNAME + 1];       /* name of key eg "c-c c-f" */
-	char k_bytes[MAX_KNAME + 1];      /* bytes of key sequence */
-	char k_funcname[MAX_KFUNC + 1];   /* name of function, eg (forward-char) */
-	void (*k_func)(void);             /* function pointer */
-	struct keymap_t *k_next;          /* link to next keymap_t */
+	char k_name[MAX_KNAME + 1];	/* name of key eg "c-c c-f" */
+	char k_bytes[MAX_KNAME + 1];	/* bytes of key sequence */
+	char k_funcname[MAX_KFUNC + 1];	/* name of function, eg (forward-char) */
+	void (*k_func) (void);	/* function pointer */
+	struct keymap_t *k_next;	/* link to next keymap_t */
 } keymap_t;
 
 typedef struct command_t {
-        char c_name[MAX_KFUNC + 1];
-	void (*c_func)(void);
+	char c_name[MAX_KFUNC + 1];
+	void (*c_func) (void);
 	struct command_t *c_next;
 } command_t;
 
@@ -115,57 +114,55 @@ typedef struct command_t {
  * Its members must be kept to a minimum as each instance takes up to 32 bytes
  */
 typedef struct undo_tt {
-	point_t  u_point;
-	char_t  *u_string;
-	char_t  *u_replace;
-	char_t   u_type;
+	point_t u_point;
+	char_t *u_string;
+	char_t *u_replace;
+	char_t u_type;
 	struct undo_tt *u_prev;
 } undo_tt;
 
-typedef struct buffer_t
-{
-	struct buffer_t *b_next;  /* Link to next buffer_t */
-	point_t b_mark;	     	  /* the mark */
-	point_t b_point;          /* the point */
-	point_t b_paren;          /* matching paren to the point */
-	point_t b_cpoint;         /* the original current point, used for mutliple window displaying */
-	point_t b_page;           /* start of page */
-	point_t b_epage;          /* end of page */
-	int b_cnt;                /* count of windows referencing this buffer */
-	int b_size;               /* current size of text being edited (not including gap) */
-	int b_psize;              /* previous size */
-	char_t *b_buf;            /* start of buffer */
-	char_t *b_ebuf;           /* end of buffer */
-	char_t *b_gap;            /* start of gap */
-	char_t *b_egap;           /* end of gap */
-	int b_row;                /* cursor row */
-	int b_col;                /* cursor col */
-	char b_fname[NAME_MAX + 1]; /* filename */
-	char b_bname[NBUFN];      /* buffer name */
-	buffer_flags_t b_flags;   /* buffer flags */
-	undo_tt *b_utail;         /* recent end of undo list */
-	int b_ucnt;               /* count of how many chars to undo on current undo */
+typedef struct buffer_t {
+	struct buffer_t *b_next;	/* Link to next buffer_t */
+	point_t b_mark;		/* the mark */
+	point_t b_point;	/* the point */
+	point_t b_paren;	/* matching paren to the point */
+	point_t b_cpoint;	/* the original current point, used for mutliple window displaying */
+	point_t b_page;		/* start of page */
+	point_t b_epage;	/* end of page */
+	int b_cnt;		/* count of windows referencing this buffer */
+	int b_size;		/* current size of text being edited (not including gap) */
+	int b_psize;		/* previous size */
+	char_t *b_buf;		/* start of buffer */
+	char_t *b_ebuf;		/* end of buffer */
+	char_t *b_gap;		/* start of gap */
+	char_t *b_egap;		/* end of gap */
+	int b_row;		/* cursor row */
+	int b_col;		/* cursor col */
+	char b_fname[NAME_MAX + 1];	/* filename */
+	char b_bname[NBUFN];	/* buffer name */
+	buffer_flags_t b_flags;	/* buffer flags */
+	undo_tt *b_utail;	/* recent end of undo list */
+	int b_ucnt;		/* count of how many chars to undo on current undo */
 } buffer_t;
 
-typedef struct window_t
-{
-	struct window_t *w_next;   /* Next window */
-	struct buffer_t *w_bufp;   /* Buffer displayed in window */
-	struct buffer_t *w_hijack; /* holds the buffer association for a hijacked window */
+typedef struct window_t {
+	struct window_t *w_next;	/* Next window */
+	struct buffer_t *w_bufp;	/* Buffer displayed in window */
+	struct buffer_t *w_hijack;	/* holds the buffer association for a hijacked window */
 	point_t w_point;
 	point_t w_mark;
 	point_t w_page;
 	point_t w_epage;
-	char w_top;	    /* origin 0 top row of window */
-	char w_rows;        /* no. of rows of text in window */
-	int w_row;          /* cursor row */
-	int w_col;          /* cursor col */
+	char w_top;		/* origin 0 top row of window */
+	char w_rows;		/* no. of rows of text in window */
+	int w_row;		/* cursor row */
+	int w_col;		/* cursor col */
 	int w_update;
 	char w_name[STRBUF_S];
 } window_t;
 
-extern buffer_t *curbp;			/* current buffer */
-extern buffer_t *bheadp;		/* head of list of buffers */
+extern buffer_t *curbp;		/* current buffer */
+extern buffer_t *bheadp;	/* head of list of buffers */
 extern window_t *curwp;
 extern window_t *wheadp;
 extern command_t *cheadp;
@@ -179,26 +176,26 @@ extern command_t *cheadp;
  */
 #define MAX_SIZE_T      ((unsigned long) (size_t) ~0)
 
-extern int done;                /* Quit flag. */
-extern int msgflag;             /* True if msgline should be displayed. */
-extern int global_undo_mode;    /* True if we are undo mode is allowed by default */
-extern point_t nscrap;          /* Length of scrap buffer. */
-extern char_t *scrap;           /* Allocated scrap buffer. */
+extern int done;		/* Quit flag. */
+extern int msgflag;		/* True if msgline should be displayed. */
+extern int global_undo_mode;	/* True if we are undo mode is allowed by default */
+extern point_t nscrap;		/* Length of scrap buffer. */
+extern char_t *scrap;		/* Allocated scrap buffer. */
 extern char_t *input;
-extern char msgline[];          /* Message line input/output buffer. */
-extern char response_buf[];     /* Temporary buffer. */
+extern char msgline[];		/* Message line input/output buffer. */
+extern char response_buf[];	/* Temporary buffer. */
 extern char searchtext[];
 extern char replace[];
 
-extern keymap_t *key_return;    /* Command key return */
+extern keymap_t *key_return;	/* Command key return */
 extern keymap_t *khead;
 extern keymap_t *ktail;
 
 /* fatal() messages. */
-extern char *f_ok;              /* EXIT_OK */
-extern char *f_error;           /* EXIT_ERROR */
-extern char *f_usage;           /* EXIT_USAGE */
-extern char *f_initscr;         /* EXIT_FAILURE ... */
+extern char *f_ok;		/* EXIT_OK */
+extern char *f_error;		/* EXIT_ERROR */
+extern char *f_usage;		/* EXIT_USAGE */
+extern char *f_initscr;		/* EXIT_FAILURE ... */
 extern char *f_alloc;
 
 /* Messages. */
@@ -237,7 +234,6 @@ extern char *str_completions;
 extern char *str_apropos;
 extern char *str_exec_command;
 
-
 /* Prompts */
 extern char *str_notsaved;
 extern char *str_modified_buffers;
@@ -252,13 +248,12 @@ extern char *str_shell_cmd;
 extern char *str_buffers;
 extern char *str_clip_too_big;
 
-
 /* functions in buffer.c */
 extern buffer_t *find_buffer_by_fname(char *);
 extern buffer_t *find_buffer(char *, int);
-extern char* get_buffer_filename(buffer_t *);
-extern char* get_buffer_modeline_name(buffer_t *);
-extern char* get_buffer_name(buffer_t *);
+extern char *get_buffer_filename(buffer_t *);
+extern char *get_buffer_modeline_name(buffer_t *);
+extern char *get_buffer_name(buffer_t *);
 extern char *get_current_bufname();
 extern int buffer_is_empty(buffer_t *);
 extern int count_buffers();
@@ -278,7 +273,7 @@ extern void zero_buffer(buffer_t *);
 /* functions in command.c */
 extern char *get_char();
 extern char *get_clipboard();
-extern char* get_temp_file();
+extern char *get_temp_file();
 extern char *get_version_string();
 extern char *rename_current_buffer(char *);
 extern int add_mode_global(char *);
@@ -355,7 +350,7 @@ extern point_t segnext(buffer_t *, point_t, point_t);
 extern point_t segstart(buffer_t *, point_t, point_t);
 extern point_t upup(buffer_t *, point_t);
 extern void b2w_all_windows(buffer_t *);
-extern void b2w(window_t *w);
+extern void b2w(window_t * w);
 extern void clear_message_line();
 extern void display_char(buffer_t *, char_t *);
 extern void display_prompt_and_response(char *, char *);
@@ -381,7 +376,7 @@ extern void describe_bindings();
 extern void describe_functions();
 
 /* functions in gap.c */
-extern char_t * ptr(buffer_t *, register point_t);
+extern char_t *ptr(buffer_t *, register point_t);
 extern int e_load_file(char *);
 extern int growgap(buffer_t *, point_t);
 extern int insert_file(char *, int);
@@ -477,6 +472,6 @@ extern void other_window();
 extern void restore_hijacked_window(window_t *);
 extern void split_window();
 extern window_t *find_window(char *);
-extern window_t* new_window();
+extern window_t *new_window();
 extern window_t *popup_window(char *);
 extern window_t *split_current_window();

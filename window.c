@@ -4,9 +4,9 @@
 
 int win_cnt = 0;
 
-window_t* new_window()
+window_t *new_window()
 {
-	window_t *wp = (window_t *)malloc(sizeof(window_t));
+	window_t *wp = (window_t *) malloc(sizeof(window_t));
 
 	assert(wp != NULL);
 	wp->w_next = NULL;
@@ -21,7 +21,7 @@ window_t* new_window()
 	return wp;
 }
 
-void one_window(window_t *wp)
+void one_window(window_t * wp)
 {
 	wp->w_top = 0;
 	wp->w_rows = LINES - 2;
@@ -45,11 +45,11 @@ window_t *split_current_window()
 	}
 
 	wp = new_window();
-	associate_b2w(curwp->w_bufp,wp);
-	b2w(wp); /* inherit buffer settings */
+	associate_b2w(curwp->w_bufp, wp);
+	b2w(wp);		/* inherit buffer settings */
 
-	ntru = (curwp->w_rows - 1) / 2; /* Upper size */
-	ntrl = (curwp->w_rows - 1) - ntru; /* Lower size */
+	ntru = (curwp->w_rows - 1) / 2;	/* Upper size */
+	ntrl = (curwp->w_rows - 1) - ntru;	/* Lower size */
 
 	/* Old is upper window */
 	curwp->w_rows = ntru;
@@ -60,17 +60,18 @@ window_t *split_current_window()
 	wp2 = curwp->w_next;
 	curwp->w_next = wp;
 	wp->w_next = wp2;
-	redraw(); /* mark the lot for update */
+	redraw();		/* mark the lot for update */
 	return curwp;
 }
 
-void other_window() {
-	curwp->w_update = TRUE; /* make sure modeline gets updated */
+void other_window()
+{
+	curwp->w_update = TRUE;	/* make sure modeline gets updated */
 	curwp = (curwp->w_next == NULL ? wheadp : curwp->w_next);
 	curbp = curwp->w_bufp;
 
 	if (curbp->b_cnt > 1)
-		w2b(curwp); /* push win vars to buffer */
+		w2b(curwp);	/* push win vars to buffer */
 }
 
 void delete_other_windows()
@@ -80,14 +81,14 @@ void delete_other_windows()
 	free_other_windows(curwp);
 }
 
-void free_other_windows(window_t *winp)
+void free_other_windows(window_t * winp)
 {
 	window_t *wp, *next;
 
 	for (wp = next = wheadp; next != NULL; wp = next) {
-		next = wp->w_next; /* get next before a call to free() makes wp undefined */
+		next = wp->w_next;	/* get next before a call to free() makes wp undefined */
 		if (wp != winp) {
-			disassociate_b(wp); /* this window no longer references its buffer */
+			disassociate_b(wp);	/* this window no longer references its buffer */
 			free(wp);
 		}
 	}
@@ -133,7 +134,7 @@ window_t *popup_window(char *bname)
 		/* returns the top window pointer */
 		wp = split_current_window();
 		disassociate_b(wp);
-		associate_b2w(bp,wp);
+		associate_b2w(bp, wp);
 		other_window();
 	} else {
 
@@ -155,16 +156,16 @@ void mark_all_windows()
 {
 	window_t *wp;
 
-	for (wp=wheadp; wp != NULL; wp = wp->w_next)
+	for (wp = wheadp; wp != NULL; wp = wp->w_next)
 		wp->w_update = TRUE;
 }
 
 int count_windows()
 {
-	window_t* wp;
+	window_t *wp;
 	int i;
 
-	for (i=0, wp=wheadp; wp != NULL; wp = wp->w_next)
+	for (i = 0, wp = wheadp; wp != NULL; wp = wp->w_next)
 		i++;
 
 	return i;
@@ -174,7 +175,7 @@ int count_windows()
  * allows a pop up window to highjack an already displayed window
  * the w_hijack member holds the previously associated buffer.
  */
-void hijack_window(window_t *wp, buffer_t *bp)
+void hijack_window(window_t * wp, buffer_t * bp)
 {
 	assert(bp != NULL);
 	assert(wp != NULL);
@@ -182,14 +183,15 @@ void hijack_window(window_t *wp, buffer_t *bp)
 	wp->w_hijack = wp->w_bufp;
 
 	disassociate_b(wp);
-	associate_b2w(bp,wp);
+	associate_b2w(bp, wp);
 	wp->w_update = TRUE;
 }
 
-void restore_hijacked_window(window_t *wp)
+void restore_hijacked_window(window_t * wp)
 {
 	assert(wp != NULL);
-	if (wp->w_hijack == NULL) return;
+	if (wp->w_hijack == NULL)
+		return;
 
 	disassociate_b(wp);
 	associate_b2w(wp->w_hijack, wp);
@@ -197,7 +199,7 @@ void restore_hijacked_window(window_t *wp)
 	wp->w_update = TRUE;
 }
 
-void associate_b2w(buffer_t *bp, window_t *wp)
+void associate_b2w(buffer_t * bp, window_t * wp)
 {
 	assert(bp != NULL);
 	assert(wp != NULL);
@@ -210,10 +212,9 @@ void associate_b2w(buffer_t *bp, window_t *wp)
  * the window should either be deleted OR associated with a new buffer.
  *
  */
-void disassociate_b(window_t *wp)
+void disassociate_b(window_t * wp)
 {
 	assert(wp != NULL);
 	assert(wp->w_bufp != NULL);
 	wp->w_bufp->b_cnt--;
 }
-

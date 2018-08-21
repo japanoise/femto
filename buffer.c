@@ -4,7 +4,7 @@
 #include <string.h>
 #include "header.h"
 
-void buffer_init(buffer_t *bp)
+void buffer_init(buffer_t * bp)
 {
 	bp->b_mark = NOMARK;
 	bp->b_point = 0;
@@ -27,22 +27,22 @@ void buffer_init(buffer_t *bp)
 	bp->b_ucnt = -1;
 }
 
-void zero_buffer(buffer_t *bp)
+void zero_buffer(buffer_t * bp)
 {
 	/* reset the gap, make it the whole buffer */
 	bp->b_gap = bp->b_buf;
 	bp->b_egap = bp->b_ebuf;
-	bp->b_point = 0; /* goto start of buffer */
+	bp->b_point = 0;	/* goto start of buffer */
 	bp->b_mark = NOMARK;
 }
 
 /* get the size of the document in the buffer */
-point_t document_size(buffer_t *bp)
+point_t document_size(buffer_t * bp)
 {
 	return (bp->b_ebuf - bp->b_buf) - (bp->b_egap - bp->b_gap);
 }
 
-int buffer_is_empty(buffer_t *bp)
+int buffer_is_empty(buffer_t * bp)
 {
 	if (bp->b_gap == bp->b_buf && bp->b_egap == bp->b_ebuf)
 		return 1;
@@ -68,7 +68,7 @@ buffer_t *find_buffer(char *bname, int cflag)
 	}
 
 	if (cflag != FALSE) {
-		if ((bp = (buffer_t *) malloc (sizeof (buffer_t))) == NULL)
+		if ((bp = (buffer_t *) malloc(sizeof(buffer_t))) == NULL)
 			return (0);
 
 		buffer_init(bp);
@@ -83,7 +83,7 @@ buffer_t *find_buffer(char *bname, int cflag)
 			bheadp = bp;
 		} else {
 			for (sb = bheadp; sb->b_next != NULL; sb = sb->b_next)
-				if (strcmp (sb->b_next->b_bname, bname) > 0)
+				if (strcmp(sb->b_next->b_bname, bname) > 0)
 					break;
 
 			/* and insert it */
@@ -93,7 +93,7 @@ buffer_t *find_buffer(char *bname, int cflag)
 
 		safe_strncpy(bp->b_bname, bname, NBUFN);
 		if (bp->b_bname[0] == '*')
-			add_mode(bp, B_SPECIAL); /* special buffers start with * in the name */
+			add_mode(bp, B_SPECIAL);	/* special buffers start with * in the name */
 		else if (global_undo_mode)
 			add_mode(bp, B_UNDO);
 
@@ -111,7 +111,7 @@ buffer_t *find_buffer(char *bname, int cflag)
 buffer_t *find_buffer_by_fname(char *fname)
 {
 	buffer_t *bp;
-	char	 bname[NBUFN];
+	char bname[NBUFN];
 
 	bp = bheadp;
 	for (bp = bheadp; bp != NULL; bp = bp->b_next)
@@ -124,16 +124,16 @@ buffer_t *find_buffer_by_fname(char *fname)
 	return (bp);
 }
 
-void add_mode(buffer_t *bp, buffer_flags_t mode)
+void add_mode(buffer_t * bp, buffer_flags_t mode)
 {
 	/* we dont allow undo mode for special buffers */
-	if ( mode == B_UNDO && (bp->b_flags & B_SPECIAL))
+	if (mode == B_UNDO && (bp->b_flags & B_SPECIAL))
 		return;
 
 	bp->b_flags |= mode;
 }
 
-void delete_mode(buffer_t *bp, buffer_flags_t mode)
+void delete_mode(buffer_t * bp, buffer_flags_t mode)
 {
 	bp->b_flags &= ~mode;
 }
@@ -143,7 +143,7 @@ void delete_mode(buffer_t *bp, buffer_flags_t mode)
  * Free the memory associated with the buffer
  * assumes that buffer has been saved if modified
  */
-int delete_buffer(buffer_t *bp)
+int delete_buffer(buffer_t * bp)
 {
 	buffer_t *sb = NULL;
 
@@ -155,8 +155,7 @@ int delete_buffer(buffer_t *bp)
 		bheadp = bp->b_next;
 	} else {
 		/* find place where the bp buffer is next */
-		for (sb = bheadp; sb->b_next != bp && sb->b_next != NULL; sb = sb->b_next)
-			;
+		for (sb = bheadp; sb->b_next != bp && sb->b_next != NULL; sb = sb->b_next) ;
 		assert(sb->b_next == bp || sb->b_next == NULL);
 		sb->b_next = bp->b_next;
 	}
@@ -174,22 +173,22 @@ void next_buffer()
 	assert(bheadp != NULL);
 	disassociate_b(curwp);
 	curbp = (curbp->b_next != NULL ? curbp->b_next : bheadp);
-	associate_b2w(curbp,curwp);
+	associate_b2w(curbp, curwp);
 }
 
-char* get_buffer_name(buffer_t *bp)
+char *get_buffer_name(buffer_t * bp)
 {
 	assert(bp->b_bname != NULL);
 	return bp->b_bname;
 }
 
-char* get_buffer_filename(buffer_t *bp)
+char *get_buffer_filename(buffer_t * bp)
 {
 	assert(bp->b_fname != NULL);
 	return bp->b_fname;
 }
 
-char* get_buffer_modeline_name(buffer_t *bp)
+char *get_buffer_modeline_name(buffer_t * bp)
 {
 	if (bp->b_fname[0] != '\0')
 		return bp->b_fname;
@@ -198,10 +197,10 @@ char* get_buffer_modeline_name(buffer_t *bp)
 
 int count_buffers()
 {
-	buffer_t* bp;
+	buffer_t *bp;
 	int i;
 
-	for (i=0, bp=bheadp; bp != NULL; bp = bp->b_next)
+	for (i = 0, bp = bheadp; bp != NULL; bp = bp->b_next)
 		i++;
 
 	return i;
@@ -209,9 +208,9 @@ int count_buffers()
 
 int modified_buffers()
 {
-	buffer_t* bp;
+	buffer_t *bp;
 
-	for (bp=bheadp; bp != NULL; bp = bp->b_next)
+	for (bp = bheadp; bp != NULL; bp = bp->b_next)
 		if (!(bp->b_flags & B_SPECIAL) && bp->b_flags & B_MODIFIED)
 			return TRUE;
 
@@ -223,7 +222,8 @@ int delete_buffer_byname(char *bname)
 	buffer_t *bp = find_buffer(bname, FALSE);
 	int bcount = count_buffers();
 
-	if (bp == NULL) return FALSE;
+	if (bp == NULL)
+		return FALSE;
 
 	/* if last buffer, create a scratch buffer */
 	if (bcount == 1) {
@@ -238,7 +238,6 @@ int delete_buffer_byname(char *bname)
 	return TRUE;
 }
 
-
 int select_buffer(char *bname)
 {
 	buffer_t *bp = find_buffer(bname, TRUE);
@@ -248,7 +247,7 @@ int select_buffer(char *bname)
 
 	disassociate_b(curwp);
 	curbp = bp;
-	associate_b2w(curbp,curwp);
+	associate_b2w(curbp, curwp);
 	return TRUE;
 }
 
@@ -257,8 +256,10 @@ int save_buffer_byname(char *bname)
 {
 	buffer_t *bp = find_buffer(bname, FALSE);
 
-	if (bp == NULL) return FALSE;
-	if (bp->b_fname[0] == '\0') return FALSE;
+	if (bp == NULL)
+		return FALSE;
+	if (bp->b_fname[0] == '\0')
+		return FALSE;
 
 	save_buffer(bp, bp->b_fname);
 	return TRUE;
@@ -282,10 +283,10 @@ void list_buffers()
 
 	list_bp = find_buffer(str_buffers, TRUE);
 
-	disassociate_b(curwp); /* we are leaving the old buffer for a new one */
+	disassociate_b(curwp);	/* we are leaving the old buffer for a new one */
 	curbp = list_bp;
 	associate_b2w(curbp, curwp);
-	clear_buffer(); /* throw away previous content */
+	clear_buffer();		/* throw away previous content */
 
 	/*             12 1234567 12345678901234567 */
 	insert_string("CO    Size Buffer           File\n");
@@ -294,11 +295,12 @@ void list_buffers()
 	bp = bheadp;
 	while (bp != NULL) {
 		if (bp != list_bp) {
-			mod_ch  = ((bp->b_flags & B_MODIFIED) ? '*' : ' ');
+			mod_ch = ((bp->b_flags & B_MODIFIED) ? '*' : ' ');
 			over_ch = ((bp->b_flags & B_OVERWRITE) ? 'O' : ' ');
 			bn = (bp->b_bname[0] != '\0' ? bp->b_bname : blank);
 			fn = (bp->b_fname[0] != '\0' ? bp->b_fname : blank);
-			sprintf(report_line, "%c%c %7d %-16s %s\n",  mod_ch, over_ch, bp->b_size, bn, fn);
+			sprintf(report_line, "%c%c %7d %-16s %s\n", mod_ch, over_ch, bp->b_size, bn,
+				fn);
 			insert_string(report_line);
 		}
 		bp = bp->b_next;

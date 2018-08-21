@@ -19,7 +19,6 @@
  *
  */
 
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -35,7 +34,7 @@
 #include <unistd.h>
 #include <curses.h>
 
-extern void debug(char *,...);
+extern void debug(char *, ...);
 #define F_NONE          0
 #define F_CLEAR         1
 typedef long point_t;
@@ -44,12 +43,10 @@ typedef long point_t;
 #define MAP_ANONYMOUS        MAP_ANON
 #endif
 
-//#define MEMORY_SIZE          131072UL
-#define MEMORY_SIZE          262144UL  /* 256k */
+/*#define MEMORY_SIZE          131072UL */
+#define MEMORY_SIZE          262144UL	/* 256k */
 
 typedef struct Object Object;
-
-
 
 typedef enum Type {
 	TYPE_NUMBER,
@@ -66,14 +63,29 @@ struct Object {
 	Type type;
 	size_t size;
 	union {
-		struct { double number; };                      // number
-		struct { char string[sizeof (Object *[3])]; };  // string, symbol
-		struct { Object *car, *cdr; };                  // cons
-		struct { Object *params, *body, *env; };        // lambda, macro
-		struct { int primitive; char *name; };          // primitive
-		struct { Object *parent, *vars, *vals; };       // env
-		struct { Object *forward; };                    // forwarding pointer
-  };
+		struct {
+			double number;
+		};		/* number */
+		struct {
+			char string[sizeof(Object *[3])];
+		};		/* string, symbol */
+		struct {
+			Object *car, *cdr;
+		};		/* cons */
+		struct {
+			Object *params, *body, *env;
+		};		/* lambda, macro */
+		struct {
+			int primitive;
+			char *name;
+		};		/* primitive */
+		struct {
+			Object *parent, *vars, *vals;
+		};		/* env */
+		struct {
+			Object *forward;
+		};		/* forwarding pointer */
+	};
 };
 
 static Object *symbols = NULL;
@@ -93,8 +105,8 @@ typedef struct Stream {
 	off_t offset, size;
 } Stream;
 
-//Stream istream = { .type = STREAM_TYPE_FILE,.fd = STDIN_FILENO };
-Stream ostream = { .type = STREAM_TYPE_FILE, .buffer = NULL, .fd = STDOUT_FILENO };
+/*Stream istream = { .type = STREAM_TYPE_FILE,.fd = STDIN_FILENO }; */
+Stream ostream = {.type = STREAM_TYPE_FILE,.buffer = NULL,.fd = STDOUT_FILENO };
 
 typedef struct Memory {
 	size_t capacity, fromOffset, toOffset;
@@ -105,7 +117,7 @@ static Memory *memory = &(Memory) { MEMORY_SIZE };
 
 static jmp_buf exceptionEnv;
 
-// EXCEPTION HANDLING /////////////////////////////////////////////////////////
+// EXCEPTION HANDLING ////////////////////////////////////////////////////////* */
 
 #define exception(...)       exceptionWithObject(NULL, __VA_ARGS__)
 
@@ -120,76 +132,76 @@ void writeFmt(Stream *, char *format, ...)
 void writeObject(Object * object, bool readably, Stream *);
 #define WRITE_FMT_BUFSIZ 2048
 
-void writeString(char *str, Stream *stream)
+void writeString(char *str, Stream * stream)
 {
-   int len;
-   char *new;
+	int len;
+	char *new;
 
-   switch (stream->type) {
-   case STREAM_TYPE_FILE:
-        len = strlen(str);
-        len = write(stream->fd, str, len);
-	return;
+	switch (stream->type) {
+	case STREAM_TYPE_FILE:
+		len = strlen(str);
+		len = write(stream->fd, str, len);
+		return;
 
-    case STREAM_TYPE_STRING:
-    default:		
-        len = strlen(str);
-	new = realloc(stream->buffer, stream->length + len + 1);
-	assert(new != NULL);
-	memcpy(new + stream->length, str, len);
-	stream->buffer = new;
-	stream->length += len;
-	new[stream->length] = '\0';
-	return;
-    }
+	case STREAM_TYPE_STRING:
+	default:
+		len = strlen(str);
+		new = realloc(stream->buffer, stream->length + len + 1);
+		assert(new != NULL);
+		memcpy(new + stream->length, str, len);
+		stream->buffer = new;
+		stream->length += len;
+		new[stream->length] = '\0';
+		return;
+	}
 }
 
-void writeFmt(Stream *stream, char *format, ...)
+void writeFmt(Stream * stream, char *format, ...)
 {
-    static char buf[WRITE_FMT_BUFSIZ];
-    int nbytes;
+	static char buf[WRITE_FMT_BUFSIZ];
+	int nbytes;
 
-    va_list args;
-    va_start(args, format);
-    nbytes = vsnprintf(buf, WRITE_FMT_BUFSIZ, format, args);
-    va_end(args);
+	va_list args;
+	va_start(args, format);
+	nbytes = vsnprintf(buf, WRITE_FMT_BUFSIZ, format, args);
+	va_end(args);
 
-    switch (stream->type) {
-    case STREAM_TYPE_FILE:
-	nbytes = write(stream->fd, buf, nbytes);
-	return;
+	switch (stream->type) {
+	case STREAM_TYPE_FILE:
+		nbytes = write(stream->fd, buf, nbytes);
+		return;
 
-    case STREAM_TYPE_STRING:
-    default:
-	writeString(buf, stream);
-	return;
-    }
+	case STREAM_TYPE_STRING:
+	default:
+		writeString(buf, stream);
+		return;
+	}
 }
 
-void writeChar(char ch, Stream *stream)
+void writeChar(char ch, Stream * stream)
 {
-    char str[2];
-    int i = 1;
+	char str[2];
+	int i = 1;
 
-    str[0] = ch;
-    str[1] = '\0';
-    
-    switch (stream->type) {
-    case STREAM_TYPE_FILE:
-	i = write(stream->fd, str, i);
-	return;
+	str[0] = ch;
+	str[1] = '\0';
 
-    case STREAM_TYPE_STRING:
-    default:		
-	writeString(str, stream);
-	return;
-    }
+	switch (stream->type) {
+	case STREAM_TYPE_FILE:
+		i = write(stream->fd, str, i);
+		return;
+
+	case STREAM_TYPE_STRING:
+	default:
+		writeString(str, stream);
+		return;
+	}
 }
 
 void exceptionWithObject(Object * object, char *format, ...)
 {
 	static char buf[WRITE_FMT_BUFSIZ];
-	
+
 	writeString("error: ", &ostream);
 
 	if (object) {
@@ -208,7 +220,7 @@ void exceptionWithObject(Object * object, char *format, ...)
 	longjmp(exceptionEnv, 1);
 }
 
-// GARBAGE COLLECTION /////////////////////////////////////////////////////////
+// GARBAGE COLLECTION ////////////////////////////////////////////////////////* */
 
 /* This implements Cheney's copying garbage collector, with which memory is
  * divided into two equal halves (semispaces): from- and to-space. From-space
@@ -265,20 +277,21 @@ void exceptionWithObject(Object * object, char *format, ...)
 
 Object *gcMoveObject(Object * object)
 {
-	// skip object if it is not within from-space (i.e. on the stack)
-	if (object < (Object *) memory->fromSpace || object >= (Object *) ((char *)memory->fromSpace + memory->fromOffset))
+	/* skip object if it is not within from-space (i.e. on the stack) */
+	if (object < (Object *) memory->fromSpace
+	    || object >= (Object *) ((char *)memory->fromSpace + memory->fromOffset))
 		return object;
 
-	// if the object has already been moved, return its new location
+	/* if the object has already been moved, return its new location */
 	if (object->type == (Type) - 1)
 		return object->forward;
 
-	// copy object to to-space
+	/* copy object to to-space */
 	Object *forward = (Object *) ((char *)memory->toSpace + memory->toOffset);
 	memcpy(forward, object, object->size);
 	memory->toOffset += object->size;
 
-	// mark object as moved and set forwarding pointer
+	/* mark object as moved and set forwarding pointer */
 	object->type = (Type) - 1;
 	object->forward = forward;
 
@@ -289,14 +302,16 @@ void gc(GC_PARAM)
 {
 	memory->toOffset = 0;
 
-	// move symbols and root objects
+	/* move symbols and root objects */
 	symbols = gcMoveObject(symbols);
 
 	for (Object * object = GC_ROOTS; object != nil; object = object->cdr)
 		object->car = gcMoveObject(object->car);
 
-	// iterate over objects in to-space and move all objects they reference
-	for (Object * object = memory->toSpace; object < (Object *) ((char *)memory->toSpace + memory->toOffset); object = (Object *) ((char *)object + object->size)) {
+	/* iterate over objects in to-space and move all objects they reference */
+	for (Object * object = memory->toSpace;
+	     object < (Object *) ((char *)memory->toSpace + memory->toOffset);
+	     object = (Object *) ((char *)object + object->size)) {
 
 		switch (object->type) {
 		case TYPE_NUMBER:
@@ -322,14 +337,14 @@ void gc(GC_PARAM)
 		}
 	}
 
-	// swap from- and to-space
+	/* swap from- and to-space */
 	void *swap = memory->fromSpace;
 	memory->fromSpace = memory->toSpace;
 	memory->toSpace = swap;
 	memory->fromOffset = memory->toOffset;
 }
 
-// MEMORY MANAGEMENT //////////////////////////////////////////////////////////
+// MEMORY MANAGEMENT /////////////////////////////////////////////////////////* */
 
 size_t memoryAlign(size_t size, size_t alignment)
 {
@@ -340,20 +355,23 @@ Object *memoryAllocObject(Type type, size_t size, GC_PARAM)
 {
 	size = memoryAlign(size, sizeof(void *));
 
-	// allocate from- and to-space
+	/* allocate from- and to-space */
 	if (!memory->fromSpace) {
-		if (!(memory->fromSpace = mmap(NULL, memory->capacity * 2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)))
+		if (!
+		    (memory->fromSpace =
+		     mmap(NULL, memory->capacity * 2, PROT_READ | PROT_WRITE,
+			  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)))
 			exception("mmap() failed, %s", strerror(errno));
 
 		memory->toSpace = (char *)memory->fromSpace + memory->capacity;
 	}
-	// run garbage collection if capacity exceeded
+	/* run garbage collection if capacity exceeded */
 	if (memory->fromOffset + size >= memory->capacity)
 		gc(GC_ROOTS);
 	if (memory->fromOffset + size >= memory->capacity)
 		exception("out of memory, %lu bytes", (unsigned long)size);
 
-	// allocate object in from-space
+	/* allocate object in from-space */
 	Object *object = (Object *) ((char *)memory->fromSpace + memory->fromOffset);
 	object->type = type;
 	object->size = size;
@@ -362,7 +380,7 @@ Object *memoryAllocObject(Type type, size_t size, GC_PARAM)
 	return object;
 }
 
-// CONSTRUCTING OBJECTS ///////////////////////////////////////////////////////
+// CONSTRUCTING OBJECTS //////////////////////////////////////////////////////* */
 
 Object *newObject(Type type, GC_PARAM)
 {
@@ -453,7 +471,8 @@ Object *newCons(Object ** car, Object ** cdr, GC_PARAM)
 Object *newSymbolWithLength(char *string, size_t length, GC_PARAM)
 {
 	for (Object * object = symbols; object != nil; object = object->cdr)
-		if (memcmp(object->car->string, string, length) == 0 && object->car->string[length] == '\0')
+		if (memcmp(object->car->string, string, length) == 0
+		    && object->car->string[length] == '\0')
 			return object->car;
 
 	GC_TRACE(gcObject, newObjectWithString(TYPE_SYMBOL, length + 1, GC_ROOTS));
@@ -528,7 +547,7 @@ Object *newEnv(Object ** func, Object ** vals, GC_PARAM)
 			else if (param == nil && val != nil)
 				exceptionWithObject(*func, "expects at most %d arguments", nArgs);
 			else if (param != nil && val == nil) {
-				for (; param->type == TYPE_CONS; param = param->cdr, ++nArgs);
+				for (; param->type == TYPE_CONS; param = param->cdr, ++nArgs) ;
 				exceptionWithObject(*func, "expects at least %d arguments", nArgs);
 			}
 		}
@@ -541,7 +560,7 @@ Object *newEnv(Object ** func, Object ** vals, GC_PARAM)
 	return object;
 }
 
-// STREAM INPUT ///////////////////////////////////////////////////////////////
+// STREAM INPUT //////////////////////////////////////////////////////////////* */
 
 /* The purpose of the stream functions is to provide an abstraction over file
  * and string inputs. In order to accommodate the REPL, we need to be able to
@@ -554,7 +573,7 @@ int streamGetc(Stream * stream)
 	if (stream->offset >= stream->length) {
 		switch (stream->type) {
 		case STREAM_TYPE_STRING:
-			// set length if a string was given but its length has not been set
+			/* set length if a string was given but its length has not been set */
 			if (!stream->length && stream->buffer && *stream->buffer) {
 				stream->length = strlen(stream->buffer);
 				return streamGetc(stream);
@@ -562,7 +581,7 @@ int streamGetc(Stream * stream)
 			return EOF;
 
 		case STREAM_TYPE_FILE:
-			// if this is the first read, try to find the size of the file
+			/* if this is the first read, try to find the size of the file */
 			if (!stream->buffer) {
 				struct stat st;
 
@@ -573,16 +592,19 @@ int streamGetc(Stream * stream)
 					stream->size = st.st_size;
 
 					if (!(stream->buffer = malloc(stream->size)))
-						exception("out of memory, %ld bytes", (long)stream->size);
+						exception("out of memory, %ld bytes",
+							  (long)stream->size);
 
 					stream->capacity = stream->size;
 				} else
 					stream->size = -1;
 			}
-			// resize buffer to nearest multiple of BUFSIZ if capacity exceeded
+			/* resize buffer to nearest multiple of BUFSIZ if capacity exceeded */
 			if (stream->offset >= stream->capacity) {
 				char *buffer;
-				size_t capacity = stream->offset ? (stream->offset / BUFSIZ + 1) * BUFSIZ : BUFSIZ;
+				size_t capacity =
+				    stream->offset ? (stream->offset / BUFSIZ +
+						      1) * BUFSIZ : BUFSIZ;
 
 				if (!(buffer = realloc(stream->buffer, capacity)))
 					exception("out of memory, %ld bytes", (long)capacity);
@@ -590,7 +612,7 @@ int streamGetc(Stream * stream)
 				stream->buffer = buffer;
 				stream->capacity = capacity;
 			}
-			// read until offset reached
+			/* read until offset reached */
 			while (stream->length <= stream->offset) {
 				ssize_t nbytes = read(stream->fd, stream->buffer + stream->length,
 						      stream->capacity - stream->length);
@@ -630,7 +652,7 @@ int streamPeek(Stream * stream)
 	return ch;
 }
 
-// READING S-EXPRESSIONS //////////////////////////////////////////////////////
+// READING S-EXPRESSIONS /////////////////////////////////////////////////////* */
 
 Object *readExpr(Stream * stream, GC_PARAM);
 
@@ -639,7 +661,7 @@ int readNext(Stream * stream)
 	for (;;) {
 		int ch = streamGetc(stream);
 		if (ch == ';')
-			while ((ch = streamGetc(stream)) != EOF && ch != '\n');
+			while ((ch = streamGetc(stream)) != EOF && ch != '\n') ;
 		if (isspace(ch))
 			continue;
 		return ch;
@@ -685,9 +707,11 @@ Object *readString(Stream * stream, GC_PARAM)
 	for (bool isEscaped = false;;) {
 		int ch = streamGetc(stream);
 		if (ch == EOF)
-			exception("unexpected end of stream in string literal \"%.*s\"", (int)(stream->offset - offset), stream->buffer + offset);
+			exception("unexpected end of stream in string literal \"%.*s\"",
+				  (int)(stream->offset - offset), stream->buffer + offset);
 		if (ch == '"' && !isEscaped)
-			return newStringWithLength(stream->buffer + offset, stream->offset - offset - 1, GC_ROOTS);
+			return newStringWithLength(stream->buffer + offset,
+						   stream->offset - offset - 1, GC_ROOTS);
 
 		isEscaped = (ch == '\\' && !isEscaped);
 	}
@@ -704,12 +728,12 @@ Object *readNumberOrSymbol(Stream * stream, GC_PARAM)
 	size_t offset = stream->offset;
 	int ch = streamPeek(stream);
 
-	// skip optional leading sign
+	/* skip optional leading sign */
 	if (ch == '+' || ch == '-') {
 		streamGetc(stream);
 		ch = streamPeek(stream);
 	}
-	// try to read a number in integer or decimal format
+	/* try to read a number in integer or decimal format */
 	if (ch == '.' || isdigit(ch)) {
 		if (isdigit(ch))
 			ch = readWhile(stream, isdigit);
@@ -720,11 +744,12 @@ Object *readNumberOrSymbol(Stream * stream, GC_PARAM)
 			if (isdigit(streamPeek(stream))) {
 				ch = readWhile(stream, isdigit);
 				if (!isSymbolChar(ch))
-					return newNumber(strtod(stream->buffer + offset, NULL), GC_ROOTS);
+					return newNumber(strtod(stream->buffer + offset, NULL),
+							 GC_ROOTS);
 			}
 		}
 	}
-	// non-numeric character encountered, read a symbol
+	/* non-numeric character encountered, read a symbol */
 	readWhile(stream, isSymbolChar);
 	return newSymbolWithLength(stream->buffer + offset, stream->offset - offset, GC_ROOTS);
 }
@@ -797,9 +822,9 @@ Object *readExpr(Stream * stream, GC_PARAM)
 	}
 }
 
-// WRITING OBJECTS ////////////////////////////////////////////////////////////
+// WRITING OBJECTS ///////////////////////////////////////////////////////////* */
 
-void writeObject(Object * object, bool readably, Stream *stream)
+void writeObject(Object * object, bool readably, Stream * stream)
 {
 	switch (object->type) {
 #define CASE(type, ...)                                                      \
@@ -868,7 +893,7 @@ void writeObject(Object * object, bool readably, Stream *stream)
 	}
 }
 
-// ENVIRONMENT ////////////////////////////////////////////////////////////////
+// ENVIRONMENT ///////////////////////////////////////////////////////////////* */
 
 /* An environment consists of a pointer to its parent environment (if any) and
  * two parallel lists - vars and vals.
@@ -938,7 +963,7 @@ Object *envSet(Object ** var, Object ** val, Object ** env, GC_PARAM)
 	}
 }
 
-// PRIMITIVES /////////////////////////////////////////////////////////////////
+// PRIMITIVES ////////////////////////////////////////////////////////////////* */
 
 Object *primitiveAtom(Object ** args, GC_PARAM)
 {
@@ -1014,32 +1039,32 @@ Object *e_##name(Object ** args, GC_PARAM) \
 }
 
 DEFINE_EDITOR_FUNC(beginning_of_buffer)
-DEFINE_EDITOR_FUNC(end_of_buffer)
-DEFINE_EDITOR_FUNC(left)
-DEFINE_EDITOR_FUNC(right)
-DEFINE_EDITOR_FUNC(forward_word)
-DEFINE_EDITOR_FUNC(backward_word)
-DEFINE_EDITOR_FUNC(up)
-DEFINE_EDITOR_FUNC(down)
-DEFINE_EDITOR_FUNC(lnbegin)
-DEFINE_EDITOR_FUNC(lnend)
-DEFINE_EDITOR_FUNC(yank)
-DEFINE_EDITOR_FUNC(update_display)
-DEFINE_EDITOR_FUNC(clear_message_line)
-DEFINE_EDITOR_FUNC(copy_region)
-DEFINE_EDITOR_FUNC(set_mark)
-DEFINE_EDITOR_FUNC(kill_region)
-DEFINE_EDITOR_FUNC(delete)
-DEFINE_EDITOR_FUNC(backspace)
-DEFINE_EDITOR_FUNC(forward_page)
-DEFINE_EDITOR_FUNC(backward_page)
-DEFINE_EDITOR_FUNC(quit)
-DEFINE_EDITOR_FUNC(eval_block)
-DEFINE_EDITOR_FUNC(delete_other_windows)
-DEFINE_EDITOR_FUNC(list_buffers)
-DEFINE_EDITOR_FUNC(split_window)
-DEFINE_EDITOR_FUNC(other_window)
-DEFINE_EDITOR_FUNC(execute_key)
+    DEFINE_EDITOR_FUNC(end_of_buffer)
+    DEFINE_EDITOR_FUNC(left)
+    DEFINE_EDITOR_FUNC(right)
+    DEFINE_EDITOR_FUNC(forward_word)
+    DEFINE_EDITOR_FUNC(backward_word)
+    DEFINE_EDITOR_FUNC(up)
+    DEFINE_EDITOR_FUNC(down)
+    DEFINE_EDITOR_FUNC(lnbegin)
+    DEFINE_EDITOR_FUNC(lnend)
+    DEFINE_EDITOR_FUNC(yank)
+    DEFINE_EDITOR_FUNC(update_display)
+    DEFINE_EDITOR_FUNC(clear_message_line)
+    DEFINE_EDITOR_FUNC(copy_region)
+    DEFINE_EDITOR_FUNC(set_mark)
+    DEFINE_EDITOR_FUNC(kill_region)
+    DEFINE_EDITOR_FUNC(delete)
+    DEFINE_EDITOR_FUNC(backspace)
+    DEFINE_EDITOR_FUNC(forward_page)
+    DEFINE_EDITOR_FUNC(backward_page)
+    DEFINE_EDITOR_FUNC(quit)
+    DEFINE_EDITOR_FUNC(eval_block)
+    DEFINE_EDITOR_FUNC(delete_other_windows)
+    DEFINE_EDITOR_FUNC(list_buffers)
+    DEFINE_EDITOR_FUNC(split_window)
+    DEFINE_EDITOR_FUNC(other_window)
+    DEFINE_EDITOR_FUNC(execute_key)
 
 extern int set_key(char *, char *);
 extern int getinput(char *, char *, int, int);
@@ -1057,7 +1082,7 @@ extern void rename_current_buffer(char *);
 extern int save_buffer_byname(char *);
 extern int count_buffers(void);
 extern void display_prompt_and_response(char *, char *);
-extern void msg(char *,...);
+extern void msg(char *, ...);
 extern void clear_message_line(void);
 extern void log_message(char *);
 extern void insert_string(char *);
@@ -1071,12 +1096,35 @@ extern int add_mode_global(char *);
 extern char *get_version_string(void);
 extern char *get_temp_file(void);
 
-Object *e_get_char(Object **args, GC_PARAM) { return newStringWithLength(get_char(), 1, GC_ROOTS); }
-Object *e_get_key(Object **args, GC_PARAM) { return newString(get_input_key(), GC_ROOTS); }
-Object *e_get_key_name(Object **args, GC_PARAM) { return newString(get_key_name(), GC_ROOTS); }
-Object *e_get_key_funcname(Object **args, GC_PARAM) { return newString(get_key_funcname(), GC_ROOTS); }
-Object *e_get_clipboard(Object **args, GC_PARAM) { return newString(get_clipboard(), GC_ROOTS); }
-Object *e_get_buffer_count(Object **args, GC_PARAM) { return newNumber(count_buffers(), GC_ROOTS); }
+Object *e_get_char(Object ** args, GC_PARAM)
+{
+	return newStringWithLength(get_char(), 1, GC_ROOTS);
+}
+
+Object *e_get_key(Object ** args, GC_PARAM)
+{
+	return newString(get_input_key(), GC_ROOTS);
+}
+
+Object *e_get_key_name(Object ** args, GC_PARAM)
+{
+	return newString(get_key_name(), GC_ROOTS);
+}
+
+Object *e_get_key_funcname(Object ** args, GC_PARAM)
+{
+	return newString(get_key_funcname(), GC_ROOTS);
+}
+
+Object *e_get_clipboard(Object ** args, GC_PARAM)
+{
+	return newString(get_clipboard(), GC_ROOTS);
+}
+
+Object *e_get_buffer_count(Object ** args, GC_PARAM)
+{
+	return newNumber(count_buffers(), GC_ROOTS);
+}
 
 #define TWO_STRING_ARGS()                                    \
 	Object *first = (*args)->car;                        \
@@ -1084,13 +1132,12 @@ Object *e_get_buffer_count(Object **args, GC_PARAM) { return newNumber(count_buf
 	if (first->type != TYPE_STRING)                      \
 	    exceptionWithObject(first, "is not a string");   \
 	if (second->type != TYPE_STRING)                     \
-	    exceptionWithObject(second, "is not a string");  
+	    exceptionWithObject(second, "is not a string");
 
 #define ONE_STRING_ARG()                                    \
 	Object *first = (*args)->car;                        \
 	if (first->type != TYPE_STRING)                      \
 	    exceptionWithObject(first, "is not a string");
-
 
 Object *e_refresh(Object ** args, GC_PARAM)
 {
@@ -1115,7 +1162,7 @@ Object *e_set_clipboard(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string (set-clipboard)");
+		exceptionWithObject(first, "is not a string (set-clipboard)");
 
 	/* gets freed by next call to set_clipboard */
 	char *sub = strdup(first->string);
@@ -1126,7 +1173,7 @@ Object *e_set_clipboard(Object ** args, GC_PARAM)
 Object *e_get_temp_file(Object ** args, GC_PARAM)
 {
 	char *fn = get_temp_file();
-	return newStringWithLength(fn, strlen(fn), GC_ROOTS);	
+	return newStringWithLength(fn, strlen(fn), GC_ROOTS);
 }
 
 Object *e_shell_command(Object ** args, GC_PARAM)
@@ -1134,7 +1181,7 @@ Object *e_shell_command(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string (set-clipboard)");
+		exceptionWithObject(first, "is not a string (set-clipboard)");
 
 	shell_command(first->string);
 	return t;
@@ -1152,7 +1199,7 @@ Object *stringAppend(Object ** args, GC_PARAM)
 	memcpy(new + len1, second->string, len2);
 	new[len1 + len2] = '\0';
 
-	Object *obj = newStringWithLength(new, len1 + len2, GC_ROOTS);	
+	Object *obj = newStringWithLength(new, len1 + len2, GC_ROOTS);
 	free(new);
 
 	return obj;
@@ -1165,16 +1212,16 @@ Object *stringRef(Object ** args, GC_PARAM)
 	Object *second = (*args)->cdr->car;
 
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string (string.ref)");
+		exceptionWithObject(first, "is not a string (string.ref)");
 	if (second->type != TYPE_NUMBER)
-	    exceptionWithObject(second, "is not a number (string.ref)");
+		exceptionWithObject(second, "is not a number (string.ref)");
 
 	char *str = first->string;
 	int ref = (int)(second->number);
 	int len = strlen(str);
 
 	if (ref < 0 || ref >= len)
-	    exceptionWithObject(second, "is out of bounds (string.ref)");
+		exceptionWithObject(second, "is out of bounds (string.ref)");
 
 	ch[0] = str[ref];
 	ch[1] = '\0';
@@ -1189,22 +1236,22 @@ Object *stringSubstring(Object ** args, GC_PARAM)
 	Object *third = (*args)->cdr->cdr->car;
 
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string (string.substring)");
+		exceptionWithObject(first, "is not a string (string.substring)");
 	if (second->type != TYPE_NUMBER)
-	    exceptionWithObject(second, "is not a number");  
+		exceptionWithObject(second, "is not a number");
 	if (third->type != TYPE_NUMBER)
-	    exceptionWithObject(third, "is not a number");  
+		exceptionWithObject(third, "is not a number");
 
 	int start = (int)(second->number);
 	int end = (int)(third->number);
 	int len = strlen(first->string);
 
-	if (start < 0 || start > len -1)
-	    exceptionWithObject(second, "is out of bounds");
-	if (end < 0 || end > len -1)
-	    exceptionWithObject(third, "is out of bounds");
+	if (start < 0 || start > len - 1)
+		exceptionWithObject(second, "is out of bounds");
+	if (end < 0 || end > len - 1)
+		exceptionWithObject(third, "is out of bounds");
 	if (start > end)
-	    exceptionWithObject(second, "start index greater than end index");
+		exceptionWithObject(second, "start index greater than end index");
 
 	char *sub = strdup(first->string);
 	int newlen = end - start + 1;
@@ -1221,9 +1268,9 @@ Object *stringLength(Object ** args, GC_PARAM)
 {
 	Object *first = (*args)->car;
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string (string.length)");
+		exceptionWithObject(first, "is not a string (string.length)");
 
-	return newNumber(strlen(first->string), GC_ROOTS);	
+	return newNumber(strlen(first->string), GC_ROOTS);
 }
 
 Object *e_show_prompt(Object ** args, GC_PARAM)
@@ -1241,7 +1288,7 @@ Object *e_prompt(Object ** args, GC_PARAM)
 	strncpy(response, second->string, 80);
 	response[80] = '\0';
 
-	(void) ! getinput(first->string, response, 80, F_NONE);
+	(void)!getinput(first->string, response, 80, F_NONE);
 	return newStringWithLength(response, strlen(response), GC_ROOTS);
 }
 
@@ -1262,7 +1309,7 @@ Object *stringToNumber(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string");
+		exceptionWithObject(first, "is not a string");
 
 	double num = strtod(first->string, NULL);
 	return newNumber(num, GC_ROOTS);
@@ -1278,7 +1325,7 @@ Object *numberToString(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_NUMBER)
-	    exceptionWithObject(first, "is not a number");
+		exceptionWithObject(first, "is not a number");
 
 	if (first->number == (long)first->number)
 		sprintf(buf, "%ld", (long)first->number);
@@ -1293,7 +1340,8 @@ Object *os_getenv(Object ** args, GC_PARAM)
 	ONE_STRING_ARG();
 
 	char *e = getenv(first->string);
-	if (e == NULL) return nil;
+	if (e == NULL)
+		return nil;
 	return newStringWithLength(e, strlen(e), GC_ROOTS);
 }
 
@@ -1308,7 +1356,7 @@ Object *e_goto_line(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_NUMBER)
-	    exceptionWithObject(first, "is not a number");
+		exceptionWithObject(first, "is not a number");
 
 	int result = goto_line(first->number);
 	return (result == 1 ? t : nil);
@@ -1387,9 +1435,9 @@ Object *asciiToString(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_NUMBER)
-	    exceptionWithObject(first, "is not a number");
+		exceptionWithObject(first, "is not a number");
 	if (first->type < 0 || first->type > 255)
-	    exceptionWithObject(first, "is not in range 0-255");
+		exceptionWithObject(first, "is not in range 0-255");
 
 	ch[0] = (unsigned char)first->number;
 	ch[1] = '\0';
@@ -1401,9 +1449,9 @@ Object *asciiToNumber(Object ** args, GC_PARAM)
 	Object *first = (*args)->car;
 
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a number");
+		exceptionWithObject(first, "is not a number");
 	if (strlen(first->string) < 1)
-	    exceptionWithObject(first, "is empty");
+		exceptionWithObject(first, "is empty");
 
 	return newNumber((double)*first->string, GC_ROOTS);
 }
@@ -1416,11 +1464,11 @@ Object *e_load(Object ** args, GC_PARAM)
 	char ebuf[81];
 	Object *first = (*args)->car;
 	if (first->type != TYPE_STRING)
-	    exceptionWithObject(first, "is not a string");
+		exceptionWithObject(first, "is not a string");
 
 	if ((fd = open(first->string, O_RDONLY)) == -1) {
 		snprintf(ebuf, 80, "failed to open %s\n", first->string);
-		ebuf[80] ='\0';
+		ebuf[80] = '\0';
 		writeString(ebuf, &ostream);
 		close(fd);
 		return nil;
@@ -1468,7 +1516,7 @@ Object *e_set_point(Object ** args, GC_PARAM)
 {
 	Object *first = (*args)->car;
 	if (first->type != TYPE_NUMBER)
-	    exceptionWithObject(first, "is not a number");
+		exceptionWithObject(first, "is not a number");
 	set_point(first->number);
 	return t;
 }
@@ -1517,40 +1565,39 @@ Object *name(Object **args, GC_PARAM) {                                      \
   }                                                                          \
 }
 
-Object *primitiveMod(Object **args, GC_PARAM) {
-  if (*args == nil)
-    return newNumber(1, GC_ROOTS);
-  else if ((*args)->car->type != TYPE_NUMBER)
-    exceptionWithObject((*args)->car, "is not a number");
-  else {
-    Object *object, *rest;
+Object *primitiveMod(Object ** args, GC_PARAM)
+{
+	if (*args == nil)
+		return newNumber(1, GC_ROOTS);
+	else if ((*args)->car->type != TYPE_NUMBER)
+		exceptionWithObject((*args)->car, "is not a number");
+	else {
+		Object *object, *rest;
 
-    if ((*args)->cdr == nil) {
-      object = newNumber(1, GC_ROOTS);
-      rest = *args;
-    } else {
-      GC_TRACE(gcFirst, (*args)->car);
-      object = newObjectFrom(gcFirst, GC_ROOTS);
-      rest = (*args)->cdr;
-    }
+		if ((*args)->cdr == nil) {
+			object = newNumber(1, GC_ROOTS);
+			rest = *args;
+		} else {
+			GC_TRACE(gcFirst, (*args)->car);
+			object = newObjectFrom(gcFirst, GC_ROOTS);
+			rest = (*args)->cdr;
+		}
 
-    for (; rest != nil; rest = rest->cdr) {
-      if (rest->car->type != TYPE_NUMBER)
-        exceptionWithObject(rest->car, "is not a number");
+		for (; rest != nil; rest = rest->cdr) {
+			if (rest->car->type != TYPE_NUMBER)
+				exceptionWithObject(rest->car, "is not a number");
 
-      object->number = (int)object->number % (int)rest->car->number;
-    }
+			object->number = (int)object->number % (int)rest->car->number;
+		}
 
-    return object;
-  }
+		return object;
+	}
 }
 
-
 DEFINE_PRIMITIVE_ARITHMETIC(primitiveAdd, +, 0)
-DEFINE_PRIMITIVE_ARITHMETIC(primitiveSubtract, -, 0)
-DEFINE_PRIMITIVE_ARITHMETIC(primitiveMultiply, *, 1)
-DEFINE_PRIMITIVE_ARITHMETIC(primitiveDivide, /, 1)
-
+    DEFINE_PRIMITIVE_ARITHMETIC(primitiveSubtract, -, 0)
+    DEFINE_PRIMITIVE_ARITHMETIC(primitiveMultiply, *, 1)
+    DEFINE_PRIMITIVE_ARITHMETIC(primitiveDivide, /, 1)
 #define DEFINE_PRIMITIVE_RELATIONAL(name, op)                                \
 Object *name(Object **args, GC_PARAM) {                                      \
   if ((*args)->car->type != TYPE_NUMBER)                                     \
@@ -1569,12 +1616,11 @@ Object *name(Object **args, GC_PARAM) {                                      \
     return result ? t : nil;                                                 \
   }                                                                          \
 }
-
-DEFINE_PRIMITIVE_RELATIONAL(primitiveEqual, ==)
-DEFINE_PRIMITIVE_RELATIONAL(primitiveLess, <)
-DEFINE_PRIMITIVE_RELATIONAL(primitiveLessEqual, <=)
-DEFINE_PRIMITIVE_RELATIONAL(primitiveGreater, >)
-DEFINE_PRIMITIVE_RELATIONAL(primitiveGreaterEqual, >=)
+    DEFINE_PRIMITIVE_RELATIONAL(primitiveEqual, ==)
+    DEFINE_PRIMITIVE_RELATIONAL(primitiveLess, <)
+    DEFINE_PRIMITIVE_RELATIONAL(primitiveLessEqual, <=)
+    DEFINE_PRIMITIVE_RELATIONAL(primitiveGreater, >)
+    DEFINE_PRIMITIVE_RELATIONAL(primitiveGreaterEqual, >=)
 
 typedef struct Primitive {
 	char *name;
@@ -1683,7 +1729,7 @@ Primitive primitives[] = {
 	{"exit", 0, 0, e_quit}
 };
 
-// Special forms handled by evalExpr. Must be in the same order as above.
+/* Special forms handled by evalExpr. Must be in the same order as above. */
 enum {
 	PRIMITIVE_QUOTE,
 	PRIMITIVE_SETQ,
@@ -1694,7 +1740,7 @@ enum {
 	PRIMITIVE_MACRO
 };
 
-// EVALUATION /////////////////////////////////////////////////////////////////
+// EVALUATION ////////////////////////////////////////////////////////////////* */
 
 /* Scheme-style tail recursive evaluation. evalProgn, evalIf and evalCond
  * return the object in the tail recursive position to be evaluated by
@@ -1868,11 +1914,14 @@ Object *evalExpr(Object ** object, Object ** env, GC_PARAM)
 					exceptionWithObject(args, "is not a list");
 
 			if (nArgs < primitive->nMinArgs)
-				exceptionWithObject(*gcFunc, "expects at least %d arguments", primitive->nMinArgs);
+				exceptionWithObject(*gcFunc, "expects at least %d arguments",
+						    primitive->nMinArgs);
 			if (nArgs > primitive->nMaxArgs && primitive->nMaxArgs >= 0)
-				exceptionWithObject(*gcFunc, "expects at most %d arguments", primitive->nMaxArgs);
+				exceptionWithObject(*gcFunc, "expects at most %d arguments",
+						    primitive->nMaxArgs);
 			if (primitive->nMaxArgs < 0 && nArgs % -primitive->nMaxArgs)
-				exceptionWithObject(*gcFunc, "expects a multiple of %d arguments", -primitive->nMaxArgs);
+				exceptionWithObject(*gcFunc, "expects a multiple of %d arguments",
+						    -primitive->nMaxArgs);
 
 			switch ((*gcFunc)->primitive) {
 			case PRIMITIVE_QUOTE:
@@ -1902,63 +1951,59 @@ Object *evalExpr(Object ** object, Object ** env, GC_PARAM)
 	}
 }
 
-// STANDARD LIBRARY ///////////////////////////////////////////////////////////
+// STANDARD LIBRARY //////////////////////////////////////////////////////////* */
 
 #define LISP(...) #__VA_ARGS__
 
-static char *stdlib = LISP(
-  (setq list (lambda args args))
-  
-  (setq defmacro (macro (name params . body)
-    (list (quote setq) name (list (quote macro) params . body))))
-  
-  (defmacro defun (name params . body)
-    (list (quote setq) name (list (quote lambda) params . body)))
-  
-  (defun null (x) (eq x nil))
-  
-  (defun map1 (func xs)
-    (if (null xs)
-        nil
-        (cons (func (car xs))
-              (map1 func (cdr xs)))))
-  
-  (defmacro and args
-    (cond ((null args) t)
-          ((null (cdr args)) (car args))
-          (t (list (quote if) (car args) (cons (quote and) (cdr args))))))
+static char *stdlib = LISP((setq list(lambda args args))
 
-  (defmacro or args 
-    (if (null args)
-        nil
-        (cons (quote cond) (map1 list args))))
+			   (setq defmacro(macro(name params.body)
+					  (list(quote setq) name(list(quote macro) params.body))))
 
-  (defun not (x) (if x nil t))
+			   (defmacro defun(name params.body)
+			    (list(quote setq) name(list(quote lambda) params.body)))
 
-  (defun consp (x) (not (atom x)))
-  (defun listp (x) (or (null x) (consp x)))
+			   (defun null(x) (eq x nil))
 
-  (defun zerop (x) (= x 0))
-  
-  (defun equal (x y)
-    (or (and (atom x) (atom y)
-             (eq x y))
-        (and (not (atom x)) (not (atom y))
-             (equal (car x) (car y))
-             (equal (cdr x) (cdr y)))))
-  
-  (defun nth (n xs)
-    (if (zerop n)
-        (car xs)
-        (nth (- n 1) (cdr xs))))
+			   (defun map1(func xs)
+			    (if (null xs)
+			     nil(cons(func(car xs))
+				 (map1 func(cdr xs)))))
 
-  (defun append (xs y)
-    (if (null xs)
-        y
-        (cons (car xs) (append (cdr xs) y))))
-);
+			   (defmacro and args(cond((null args) t)
+					      ((null(cdr args)) (car args))
+					      (t
+					       (list(quote if) (car args)
+						(cons(quote and) (cdr args))))))
 
-// MAIN ///////////////////////////////////////////////////////////////////////
+			   (defmacro or args(if (null args)
+					     nil(cons(quote cond) (map1 list args))))
+
+			   (defun not(x) (if x nil t))
+
+			   (defun consp(x) (not(atom x)))
+			   (defun listp(x) (or(null x) (consp x)))
+
+			   (defun zerop(x) ( = x 0))
+
+			   (defun equal(x y)
+			    (or(and(atom x) (atom y)
+				(eq x y))
+			     (and(not(atom x)) (not(atom y))
+			      (equal(car x) (car y))
+			      (equal(cdr x) (cdr y)))))
+
+			   (defun nth(n xs)
+			    (if (zerop n)
+			     (car xs)
+			     (nth(-n 1) (cdr xs))))
+
+			   (defun append(xs y)
+			    (if (null xs)
+			     y(cons(car xs) (append(cdr xs) y))))
+    ) ;
+
+// MAIN //////////////////////////////////////////////////////////////////////* */
 
 Object *newRootEnv(GC_PARAM)
 {
@@ -1966,11 +2011,11 @@ Object *newRootEnv(GC_PARAM)
 	GC_TRACE(gcVar, nil);
 	GC_TRACE(gcVal, nil);
 
-	// add constants
+	/* add constants */
 	envSet(&nil, &nil, gcEnv, GC_ROOTS);
 	envSet(&t, &t, gcEnv, GC_ROOTS);
 
-	// add primitives
+	/* add primitives */
 	int nPrimitives = sizeof(primitives) / sizeof(primitives[0]);
 
 	for (int i = 0; i < nPrimitives; ++i) {
@@ -1980,7 +2025,7 @@ Object *newRootEnv(GC_PARAM)
 		envSet(gcVar, gcVal, gcEnv, GC_ROOTS);
 	}
 
-	// add standard library
+	/* add standard library */
 	Stream stream = { STREAM_TYPE_STRING,.buffer = stdlib };
 	GC_TRACE(gcObject, nil);
 
@@ -1997,14 +2042,14 @@ Object *theRoot;
 Object temp_root;
 Object **theEnv;
 
-void set_stream_file(Stream *stream, int fd)
+void set_stream_file(Stream * stream, int fd)
 {
 	assert(stream != NULL);
 	stream->type = STREAM_TYPE_FILE;
 	stream->fd = fd;
 }
 
-void set_input_stream_buffer(Stream *stream, char *buffer)
+void set_input_stream_buffer(Stream * stream, char *buffer)
 {
 	assert(stream != NULL);
 	assert(buffer != NULL);
@@ -2020,7 +2065,7 @@ void set_input_stream_buffer(Stream *stream, char *buffer)
 
 void reset_output_stream()
 {
-	Stream *stream = &ostream; /* we only want 1 output stream */
+	Stream *stream = &ostream;	/* we only want 1 output stream */
 	stream->type = STREAM_TYPE_STRING;
 	stream->length = 0;
 	if (stream->buffer != NULL) {
@@ -2029,9 +2074,9 @@ void reset_output_stream()
 	}
 }
 
-void load_file_body(Object ** env, GC_PARAM, Stream *input_stream)
+void load_file_body(Object ** env, GC_PARAM, Stream * input_stream)
 {
-	//debug("load_file_body\n");
+	/*debug("load_file_body\n"); */
 	GC_TRACE(gcObject, nil);
 
 	if (setjmp(exceptionEnv))
@@ -2046,7 +2091,7 @@ void load_file_body(Object ** env, GC_PARAM, Stream *input_stream)
 	}
 }
 
-void call_lisp_body(Object ** env, GC_PARAM, Stream *input_stream)
+void call_lisp_body(Object ** env, GC_PARAM, Stream * input_stream)
 {
 	GC_TRACE(gcObject, nil);
 
@@ -2075,7 +2120,7 @@ int init_lisp()
 {
 	theRoot = nil;
 
-	//set_stream_file(&istream, STDIN_FILENO);
+	/*set_stream_file(&istream, STDIN_FILENO); */
 	set_stream_file(&ostream, STDOUT_FILENO);
 
 	if (setjmp(exceptionEnv))
@@ -2097,21 +2142,21 @@ int init_lisp()
 char *call_lisp(char *input)
 {
 	assert(input != NULL);
-	Stream is = { .type = STREAM_TYPE_STRING };
+	Stream is = {.type = STREAM_TYPE_STRING };
 
-	//debug("START: call_lisp() '%s'\n", input);
+	/*debug("START: call_lisp() '%s'\n", input); */
 	set_input_stream_buffer(&is, input);
 	call_lisp_body(theEnv, theRoot, &is);
-	//debug("END: call_lisp() '%s'\n", input);
+	/*debug("END: call_lisp() '%s'\n", input); */
 	return ostream.buffer;
 }
 
 char *load_file(int infd)
 {
-	//debug("START: load_file fd=%d\n", infd);
-	Stream input_stream = { .type = STREAM_TYPE_FILE, .fd = -1 };
+	/*debug("START: load_file fd=%d\n", infd); */
+	Stream input_stream = {.type = STREAM_TYPE_FILE,.fd = -1 };
 	set_stream_file(&input_stream, infd);
 	load_file_body(theEnv, theRoot, &input_stream);
-	//debug("END: load_file fd=%d\n", infd);
+	/*debug("END: load_file fd=%d\n", infd); */
 	return ostream.buffer;
 }

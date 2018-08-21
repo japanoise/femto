@@ -21,8 +21,8 @@ keymap_t *key_return;
 keymap_t *khead = NULL;
 keymap_t *ktail = NULL;
 
-buffer_t *curbp;			/* current buffer */
-buffer_t *bheadp;			/* head of list of buffers */
+buffer_t *curbp;		/* current buffer */
+buffer_t *bheadp;		/* head of list of buffers */
 window_t *curwp;
 window_t *wheadp;
 command_t *cheadp = NULL;
@@ -56,13 +56,13 @@ char *m_goto = "Goto line: ";
 char *m_sprompt = "Search: ";
 char *m_qreplace = "Replace '%s' with '%s' ? ";
 char *m_rephelp = "(y)es, (n)o, (!)do the rest, (q)uit";
-char *m_nomark ="No mark set";
+char *m_nomark = "No mark set";
 char *m_noregion = "No region defined, mark and point are the same place";
 
 char *str_notsaved = "Discard changes (y/n) ?";
 char *str_modified_buffers = "Modified buffers exist; really exit (y/n) ?";
 char *str_read = "Find file: ";
-char *str_insert_file ="Insert file: ";
+char *str_insert_file = "Insert file: ";
 char *str_write = "Write file: ";
 char *str_yes = " y\b";
 char *str_no = " n\b";
@@ -74,7 +74,7 @@ char *str_output = "*output*";
 char *str_shell_cmd = "Shell Command: ";
 char *str_buffers = "*buffers*";
 char *str_clip_too_big = "Region exceeds lisp clipboard limit of %d bytes";
-char *str_not_bound  = "Not bound";
+char *str_not_bound = "Not bound";
 char *str_help_buf = "*help*";
 char *str_completions = "*completions*";
 char *str_apropos = "apropos: ";

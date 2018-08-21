@@ -6,7 +6,7 @@
 #include "header.h"
 
 /* Reverse scan for start of logical line containing offset */
-point_t lnstart(buffer_t *bp, register point_t off)
+point_t lnstart(buffer_t * bp, register point_t off)
 {
 	register char_t *p;
 	do
@@ -19,7 +19,7 @@ point_t lnstart(buffer_t *bp, register point_t off)
  * Forward scan for start of logical line segment containing 'finish'.
  * A segment of a logical line corresponds to a physical screen line.
  */
-point_t segstart(buffer_t *bp, point_t start, point_t finish)
+point_t segstart(buffer_t * bp, point_t start, point_t finish)
 {
 	char_t *p;
 	int c = 0;
@@ -34,14 +34,14 @@ point_t segstart(buffer_t *bp, point_t start, point_t finish)
 			c = 0;
 			start = scan;
 		}
-		scan += utf8_size(*ptr(bp,scan));
+		scan += utf8_size(*ptr(bp, scan));
 		c += *p == '\t' ? 8 - (c & 7) : 1;
 	}
 	return (c < COLS ? start : finish);
 }
 
 /* Forward scan for start of logical line segment following 'finish' */
-point_t segnext(buffer_t *bp, point_t start, point_t finish)
+point_t segnext(buffer_t * bp, point_t start, point_t finish)
 {
 	char_t *p;
 	int c = 0;
@@ -51,7 +51,7 @@ point_t segnext(buffer_t *bp, point_t start, point_t finish)
 		p = ptr(bp, scan);
 		if (bp->b_ebuf <= p || COLS <= c)
 			break;
-		scan += utf8_size(*ptr(bp,scan));
+		scan += utf8_size(*ptr(bp, scan));
 		if (*p == '\n')
 			break;
 		c += *p == '\t' ? 8 - (c & 7) : 1;
@@ -60,57 +60,57 @@ point_t segnext(buffer_t *bp, point_t start, point_t finish)
 }
 
 /* Move up one screen line */
-point_t upup(buffer_t *bp, point_t off)
+point_t upup(buffer_t * bp, point_t off)
 {
 	point_t curr = lnstart(bp, off);
 	point_t seg = segstart(bp, curr, off);
 	if (curr < seg)
-		off = segstart(bp, curr, seg-1);
+		off = segstart(bp, curr, seg - 1);
 	else
-		off = segstart(bp, lnstart(bp,curr-1), curr-1);
+		off = segstart(bp, lnstart(bp, curr - 1), curr - 1);
 	return (off);
 }
 
 /* Move down one screen line */
-point_t dndn(buffer_t *bp, point_t off)
+point_t dndn(buffer_t * bp, point_t off)
 {
-	return (segnext(bp, lnstart(bp,off), off));
+	return (segnext(bp, lnstart(bp, off), off));
 }
 
 /* Return the offset of a column on the specified line */
-point_t lncolumn(buffer_t *bp, point_t offset, int column)
+point_t lncolumn(buffer_t * bp, point_t offset, int column)
 {
 	int c = 0;
 	char_t *p;
 	while ((p = ptr(bp, offset)) < bp->b_ebuf && *p != '\n' && c < column) {
 		c += *p == '\t' ? 8 - (c & 7) : 1;
-		offset += utf8_size(*ptr(bp,offset));
+		offset += utf8_size(*ptr(bp, offset));
 	}
 	return (offset);
 }
 
-void display_char(buffer_t *bp, char_t *p)
+void display_char(buffer_t * bp, char_t * p)
 {
-        if ( (ptr(bp, bp->b_mark) == p) && (bp->b_mark != NOMARK)) {
-                addch(*p | A_REVERSE);
+	if ((ptr(bp, bp->b_mark) == p) && (bp->b_mark != NOMARK)) {
+		addch(*p | A_REVERSE);
 		return;
-        } else if (bp->b_paren != NOPAREN && pos(bp,p) == bp->b_paren) {
-                attron(COLOR_PAIR(ID_BRACE));
-        }
+	} else if (bp->b_paren != NOPAREN && pos(bp, p) == bp->b_paren) {
+		attron(COLOR_PAIR(ID_BRACE));
+	}
 	addch(*p);
 }
 
-void display(window_t *wp, int flag)
+void display(window_t * wp, int flag)
 {
 	char_t *p;
 	int i, j, k, nch;
 	buffer_t *bp = wp->w_bufp;
 	int token_type = ID_DEFAULT;
-	
+
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within b_page and b_epage */
 	if (bp->b_point < bp->b_page)
-		bp->b_page = segstart(bp, lnstart(bp,bp->b_point), bp->b_point);
+		bp->b_page = segstart(bp, lnstart(bp, bp->b_point), bp->b_point);
 
 	/* reframe when scrolled off bottom */
 	if (bp->b_epage < bp->b_point) {
@@ -128,11 +128,11 @@ void display(window_t *wp, int flag)
 			bp->b_page = upup(bp, bp->b_page);
 	}
 
-	move(wp->w_top, 0); /* start from top of window */
+	move(wp->w_top, 0);	/* start from top of window */
 	i = wp->w_top;
 	j = 0;
 	bp->b_epage = bp->b_page;
-	set_parse_state(bp, bp->b_epage); /* are we in a multline comment ? */
+	set_parse_state(bp, bp->b_epage);	/* are we in a multline comment ? */
 
 	/* paint screen from top of page until we hit maxline */
 	while (1) {
@@ -143,24 +143,25 @@ void display(window_t *wp, int flag)
 		}
 		p = ptr(bp, bp->b_epage);
 		nch = 1;
-		if (wp->w_top + wp->w_rows <= i || bp->b_ebuf <= p) /* maxline */
+		if (wp->w_top + wp->w_rows <= i || bp->b_ebuf <= p)	/* maxline */
 			break;
 		if (*p != '\r') {
 			nch = utf8_size(*p);
-			if ( nch > 1) {
+			if (nch > 1) {
 				wchar_t c;
 				/* reset if invalid multi-byte character */
-				if (mbtowc(&c, (char*)p, 6) < 0) mbtowc(NULL, NULL, 0); 
+				if (mbtowc(&c, (char *)p, 6) < 0)
+					mbtowc(NULL, NULL, 0);
 				j += wcwidth(c) < 0 ? 1 : wcwidth(c);
 				display_utf8(bp, *p, nch);
 			} else if (isprint(*p) || *p == '\t' || *p == '\n') {
-				j += *p == '\t' ? 8-(j&7) : 1;
+				j += *p == '\t' ? 8 - (j & 7) : 1;
 				token_type = parse_text(bp, bp->b_epage);
 				attron(COLOR_PAIR(token_type));
 				display_char(bp, p);
 			} else {
 				const char *ctrl = unctrl(*p);
-				j += (int) strlen(ctrl);
+				j += (int)strlen(ctrl);
 				addstr(ctrl);
 			}
 		}
@@ -174,35 +175,35 @@ void display(window_t *wp, int flag)
 	}
 
 	/* replacement for clrtobot() to bottom of window */
-	for (k=i; k < wp->w_top + wp->w_rows; k++) {
-		move(k, j); /* clear from very last char not start of line */
+	for (k = i; k < wp->w_top + wp->w_rows; k++) {
+		move(k, j);	/* clear from very last char not start of line */
 		clrtoeol();
-		j = 0; /* thereafter start of line */
+		j = 0;		/* thereafter start of line */
 	}
 
-	b2w(wp); /* save buffer stuff on window */
+	b2w(wp);		/* save buffer stuff on window */
 	modeline(wp);
 	if (wp == curwp && flag) {
 		dispmsg();
-		move(bp->b_row, bp->b_col); /* set cursor */
+		move(bp->b_row, bp->b_col);	/* set cursor */
 		refresh();
 	}
 	wp->w_update = FALSE;
 }
 
-void display_utf8(buffer_t *bp, char_t c, int n)
+void display_utf8(buffer_t * bp, char_t c, int n)
 {
 	char sbuf[6];
 	int i = 0;
 
-	for (i=0; i<n; i++) {
+	for (i = 0; i < n; i++) {
 		sbuf[i] = *ptr(bp, bp->b_epage + i);
 	}
 	sbuf[n] = '\0';
 	addstr(sbuf);
 }
 
-void modeline(window_t *wp)
+void modeline(window_t * wp)
 {
 	int i;
 	char lch, mch, och;
@@ -215,7 +216,8 @@ void modeline(window_t *wp)
 	mch = ((wp->w_bufp->b_flags & B_MODIFIED) ? '*' : lch);
 	och = ((wp->w_bufp->b_flags & B_OVERWRITE) ? 'O' : lch);
 
-	sprintf(modeline, "%c%c%c Femto: %c%c %s",  lch,och,mch,lch,lch, get_buffer_name(wp->w_bufp));
+	sprintf(modeline, "%c%c%c Femto: %c%c %s", lch, och, mch, lch, lch,
+		get_buffer_name(wp->w_bufp));
 	addstr(modeline);
 
 	for (i = strlen(modeline) + 1; i <= COLS; i++)
@@ -256,7 +258,7 @@ void update_display()
 	buffer_t *bp;
 
 	bp = curwp->w_bufp;
-	bp->b_cpoint = bp->b_point; /* cpoint only ever set here */
+	bp->b_cpoint = bp->b_point;	/* cpoint only ever set here */
 
 	/* only one window */
 	if (wheadp->w_next == NULL) {
@@ -266,10 +268,10 @@ void update_display()
 		return;
 	}
 
-	display(curwp, FALSE); /* this is key, we must call our win first to get accurate page and epage etc */
+	display(curwp, FALSE);	/* this is key, we must call our win first to get accurate page and epage etc */
 
-	/* never curwp,  but same buffer in different window or update flag set*/
-	for (wp=wheadp; wp != NULL; wp = wp->w_next) {
+	/* never curwp,  but same buffer in different window or update flag set */
+	for (wp = wheadp; wp != NULL; wp = wp->w_next) {
 		if (wp != curwp && (wp->w_bufp == bp || wp->w_update)) {
 			w2b(wp);
 			display(wp, FALSE);
@@ -279,12 +281,12 @@ void update_display()
 	/* now display our window and buffer */
 	w2b(curwp);
 	dispmsg();
-	move(curwp->w_row, curwp->w_col); /* set cursor for curwp */
+	move(curwp->w_row, curwp->w_col);	/* set cursor for curwp */
 	refresh();
-	bp->b_psize = bp->b_size;  /* now safe to save previous size for next time */
+	bp->b_psize = bp->b_size;	/* now safe to save previous size for next time */
 }
 
-void w2b(window_t *w)
+void w2b(window_t * w)
 {
 	w->w_bufp->b_point = w->w_point;
 	w->w_bufp->b_page = w->w_page;
@@ -300,14 +302,15 @@ void w2b(window_t *w)
 	}
 }
 
-void b2w(window_t *w)
+void b2w(window_t * w)
 {
 	w->w_point = w->w_bufp->b_point;
 	w->w_page = w->w_bufp->b_page;
 	w->w_epage = w->w_bufp->b_epage;
 	w->w_row = w->w_bufp->b_row;
 	w->w_col = w->w_bufp->b_col;
-	w->w_bufp->b_size = (w->w_bufp->b_ebuf - w->w_bufp->b_buf) - (w->w_bufp->b_egap - w->w_bufp->b_gap);
+	w->w_bufp->b_size =
+	    (w->w_bufp->b_ebuf - w->w_bufp->b_buf) - (w->w_bufp->b_egap - w->w_bufp->b_gap);
 }
 
 /*
@@ -315,11 +318,11 @@ void b2w(window_t *w)
  * special behaviour for where we want to see updates in real time
  * (for example *messages* buffer)
  */
-void b2w_all_windows(buffer_t *bp)
+void b2w_all_windows(buffer_t * bp)
 {
 	window_t *wp;
 
-	for (wp=wheadp; wp != NULL; wp = wp->w_next) {
+	for (wp = wheadp; wp != NULL; wp = wp->w_next) {
 		if (wp->w_bufp == bp) {
 			b2w(wp);
 		}

@@ -10,24 +10,24 @@ int main(int argc, char **argv)
 	setup_keys();
 	(void)init_lisp();
 
-
-	setlocale(LC_ALL, "") ; /* required for 3,4 byte UTF8 chars */
-	if (initscr() == NULL) fatal(f_initscr);
+	setlocale(LC_ALL, "");	/* required for 3,4 byte UTF8 chars */
+	if (initscr() == NULL)
+		fatal(f_initscr);
 	raw();
 	noecho();
 	idlok(stdscr, TRUE);
 
 	start_color();
-	init_pair(ID_DEFAULT, COLOR_CYAN, COLOR_BLACK);          /* alpha */
-	init_pair(ID_SYMBOL, COLOR_WHITE, COLOR_BLACK);          /* non alpha, non digit */
-	init_pair(ID_MODELINE, COLOR_BLACK, COLOR_WHITE);        /* modeline */
-	init_pair(ID_DIGITS, COLOR_YELLOW, COLOR_BLACK);         /* digits */
-	init_pair(ID_BLOCK_COMMENT, COLOR_GREEN, COLOR_BLACK);   /* block comments */
-	init_pair(ID_LINE_COMMENT, COLOR_GREEN, COLOR_BLACK);    /* line comments */
-	init_pair(ID_SINGLE_STRING, COLOR_YELLOW, COLOR_BLACK);  /* single quoted strings */
-	init_pair(ID_DOUBLE_STRING, COLOR_YELLOW, COLOR_BLACK);  /* double quoted strings */
-	init_pair(ID_BRACE, COLOR_BLACK, COLOR_CYAN);            /* brace highlight */
-	
+	init_pair(ID_DEFAULT, COLOR_CYAN, COLOR_BLACK);	/* alpha */
+	init_pair(ID_SYMBOL, COLOR_WHITE, COLOR_BLACK);	/* non alpha, non digit */
+	init_pair(ID_MODELINE, COLOR_BLACK, COLOR_WHITE);	/* modeline */
+	init_pair(ID_DIGITS, COLOR_YELLOW, COLOR_BLACK);	/* digits */
+	init_pair(ID_BLOCK_COMMENT, COLOR_GREEN, COLOR_BLACK);	/* block comments */
+	init_pair(ID_LINE_COMMENT, COLOR_GREEN, COLOR_BLACK);	/* line comments */
+	init_pair(ID_SINGLE_STRING, COLOR_YELLOW, COLOR_BLACK);	/* single quoted strings */
+	init_pair(ID_DOUBLE_STRING, COLOR_YELLOW, COLOR_BLACK);	/* double quoted strings */
+	init_pair(ID_BRACE, COLOR_BLACK, COLOR_CYAN);	/* brace highlight */
+
 	if (1 < argc) {
 		char bname[NBUFN];
 		char fname[NAME_MAX + 1];
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 		input = get_key(khead, &key_return);
 
 		if (key_return != NULL) {
-			(key_return->k_func)();
+			(key_return->k_func) ();
 		} else {
 			/*
 			 * if first char of input is a control char then
@@ -62,8 +62,8 @@ int main(int argc, char **argv)
 			 */
 			if (*input > 31 || *input == 0x0A || *input == 0x09)
 				insert();
-                        else {
-				flushinp(); /* discard without writing in buffer */
+			else {
+				flushinp();	/* discard without writing in buffer */
 				msg(str_not_bound);
 			}
 		}
@@ -72,8 +72,9 @@ int main(int argc, char **argv)
 		match_parens();
 	}
 
-	if (scrap != NULL) free(scrap);
-	move(LINES-1, 0);
+	if (scrap != NULL)
+		free(scrap);
+	move(LINES - 1, 0);
 	refresh();
 	noraw();
 	endwin();
@@ -94,7 +95,7 @@ void msg(char *m, ...)
 {
 	va_list args;
 	va_start(args, m);
-	(void) vsprintf(msgline, m, args);
+	(void)vsprintf(msgline, m, args);
 	va_end(args);
 	msgflag = TRUE;
 }
@@ -124,24 +125,27 @@ void load_config()
 
 void debug(char *format, ...)
 {
-	char buffer[256]; /* warning this is limited size, we should use vnsprintf */
+	char buffer[256];	/* warning this is limited size, we should use vnsprintf */
 
 	va_list args;
-	va_start (args, format);
+	va_start(args, format);
 
 	static FILE *debug_fp = NULL;
 
 	if (debug_fp == NULL) {
-		debug_fp = fopen("debug.out","w");
+		debug_fp = fopen("debug.out", "w");
 	}
 
-	vsprintf (buffer, format, args);
+	vsprintf(buffer, format, args);
 	va_end(args);
 
-	fprintf(debug_fp,"%s", buffer);
+	fprintf(debug_fp, "%s", buffer);
 	fflush(debug_fp);
 }
 
-void debug_stats(char *s) {
-	debug("%s bsz=%d p=%d m=%d gap=%d egap=%d\n", s, curbp->b_ebuf - curbp->b_buf, curbp->b_point, curbp->b_mark, curbp->b_gap - curbp->b_buf, curbp->b_egap - curbp->b_buf);
+void debug_stats(char *s)
+{
+	debug("%s bsz=%d p=%d m=%d gap=%d egap=%d\n", s, curbp->b_ebuf - curbp->b_buf,
+	      curbp->b_point, curbp->b_mark, curbp->b_gap - curbp->b_buf,
+	      curbp->b_egap - curbp->b_buf);
 }
