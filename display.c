@@ -106,7 +106,7 @@ void display(window_t *wp, int flag)
 	int i, j, k, nch;
 	buffer_t *bp = wp->w_bufp;
 	int token_type = ID_DEFAULT;
-	
+
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within b_page and b_epage */
 	if (bp->b_point < bp->b_page)
@@ -150,7 +150,7 @@ void display(window_t *wp, int flag)
 			if ( nch > 1) {
 				wchar_t c;
 				/* reset if invalid multi-byte character */
-				if (mbtowc(&c, (char*)p, 6) < 0) mbtowc(NULL, NULL, 0); 
+				if (mbtowc(&c, (char*)p, 6) < 0) mbtowc(NULL, NULL, 0);
 				j += wcwidth(c) < 0 ? 1 : wcwidth(c);
 				display_utf8(bp, *p, nch);
 			} else if (isprint(*p) || *p == '\t' || *p == '\n') {
@@ -209,7 +209,8 @@ void modeline(window_t *wp)
 	static char modeline[256];
 
 	/* n = utf8_size(*(ptr(wp->w_bufp, wp->w_bufp->b_point))); */
-	attron(COLOR_PAIR(ID_MODELINE));
+	attron(A_REVERSE);
+	attron(COLOR_PAIR(ID_DEFAULT));
 	move(wp->w_top + wp->w_rows, 0);
 	lch = (wp == curwp ? '=' : '-');
 	mch = ((wp->w_bufp->b_flags & B_MODIFIED) ? '*' : lch);
@@ -220,7 +221,7 @@ void modeline(window_t *wp)
 
 	for (i = strlen(modeline) + 1; i <= COLS; i++)
 		addch(lch);
-	attron(COLOR_PAIR(ID_SYMBOL));
+	attroff(A_REVERSE);
 }
 
 void dispmsg()

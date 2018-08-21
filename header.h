@@ -74,6 +74,9 @@ int mkstemp(char *);
 #define STR_T_REPLACE      "REPLC "
 #define STR_T_NONE         "NONE  "
 
+/* using black as the background is a pet peeve of mine :) */
+#define COLOR_DEFAULT -1
+
 /* edit field attributes */
 #define F_NONE          0
 #define F_CLEAR         1
@@ -172,7 +175,7 @@ extern command_t *cheadp;
 
 /*
  * Some compilers define size_t as a unsigned 16 bit number while
- * point_t and off_t might be defined as a signed 32 bit number.  
+ * point_t and off_t might be defined as a signed 32 bit number.
  * malloc(), realloc(), fread(), and fwrite() take size_t parameters,
  * which means there will be some size limits because size_t is too
  * small of a type.
