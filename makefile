@@ -10,7 +10,7 @@ LDFLAGS = -o
 LIBS    = -lncursesw
 CP      = cp
 MV      = mv
-RM      = rm
+RM      = rm -rf
 
 OBJ     = command.o display.o complete.o data.o gap.o key.o search.o buffer.o replace.o window.o undo.o funcmap.o utils.o hilite.o lisp.o main.o
 
