@@ -304,7 +304,6 @@ extern void copy_region();
 extern void delete();
 extern void down();
 extern void end_of_buffer();
-extern void eval_block();
 extern void forward_page();
 extern void forward_word();
 extern void i_gotoline();
@@ -332,7 +331,6 @@ extern void quit();
 extern void quit_ask();
 extern void readfile(char *);
 extern void redraw();
-extern void repl();
 extern void resize_terminal();
 extern void right();
 extern void savebuffer();
@@ -344,7 +342,6 @@ extern void cursor_position();
 extern void toggle_overwrite_mode();
 extern void unmark();
 extern void up();
-extern void user_func();
 extern void version();
 extern void writefile();
 extern void yank();
@@ -418,18 +415,11 @@ extern void execute_key();
 extern void make_key(char *, char *);
 extern void setup_keys();
 
-/* functions in lisp.c */
-extern char *call_lisp(char *);
-extern char *load_file(int);
-extern int init_lisp();
-extern void reset_output_stream(void);
-
 /* functions in main.c */
 extern int main(int argc, char **);
 extern void debug(char *format, ...);
 extern void debug_stats(char *s);
 extern void fatal(char *msg);
-extern void load_config();
 extern void msg(char *m, ...);
 
 /* functions in replace.c */

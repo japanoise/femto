@@ -8,8 +8,6 @@
 int main(int argc, char **argv)
 {
 	setup_keys();
-	(void)init_lisp();
-
 
 	setlocale(LC_ALL, "") ; /* required for 3,4 byte UTF8 chars */
 	if (initscr() == NULL) fatal(f_initscr);
@@ -47,7 +45,6 @@ int main(int argc, char **argv)
 	associate_b2w(curbp, curwp);
 
 	beginning_of_buffer();
-	load_config();
 
 	while (!done) {
 		update_display();
@@ -97,37 +94,6 @@ void msg(char *m, ...)
 	(void) vsprintf(msgline, m, args);
 	va_end(args);
 	msgflag = TRUE;
-}
-
-void load_config()
-{
-	char fname[300];
-	char *output;
-	int fd;
-
-	reset_output_stream();
-	(void)snprintf(fname, 300, "%s/%s", getenv("HOME"), E_INITFILE);
-
-	if ((fd = open(fname, O_RDONLY)) == -1)
-		return;
-
-	reset_output_stream();
-	output = load_file(fd);
-	assert(output != NULL);
-	close(fd);
-
-	/*
-	 * If output is null, the rc file was empty, so quit early.
-	 * Otherwise, the strstr call will segfault!
-	 */
-	if (output == NULL) {
-		reset_output_stream();
-		return;
-	}
-	/* all exceptions start with the word error: */
-	if (NULL != strstr(output, "error:"))
-		fatal(output);
-	reset_output_stream();
 }
 
 void debug(char *format, ...)

@@ -14,7 +14,7 @@ keymap_t *new_key(char *name, char *bytes)
 	strncpy(kp->k_bytes, bytes, MAX_KBYTES);
 	kp->k_name[MAX_KNAME] ='\0';
 	kp->k_bytes[MAX_KBYTES] ='\0';
-	kp->k_func = user_func;
+	kp->k_func = NULL;
 	strcpy(kp->k_funcname, E_NOT_BOUND);
 	kp->k_next = NULL;
 	return kp;
@@ -98,10 +98,7 @@ int set_key_internal(char *name, char *funcname, char *bytes, void (*func)(void)
 		if (0 == strcmp(kp->k_name, name)) {
 			strncpy(kp->k_funcname, funcname, MAX_KFUNC);
 			kp->k_funcname[MAX_KFUNC] ='\0';
-			if (func != NULL)  /* dont set if its a user_func */
-				kp->k_func = func;
-			else
-				kp->k_func = user_func;
+			kp->k_func = func;
 			if (strcmp("user_func", funcname) != 0)
 				(void)register_command(funcname, func);
 			return 1;
@@ -166,17 +163,11 @@ void setup_keys()
 
 	set_key_internal("esc-up",    "beginning-of-buffer" , "\x1B\x1B\x5B\x41", beginning_of_buffer);
 	set_key_internal("esc-down",  "end-of-buffer"       , "\x1B\x1B\x5B\x42", end_of_buffer);
-	set_key_internal("esc-right", "user-func"           , "\x1B\x1B\x5B\x43", user_func);
-	set_key_internal("esc-left",  "user-func"           , "\x1B\x1B\x5B\x44", user_func);
 	set_key_internal("esc-end",   "end-of-buffer"       , "\x1B\x1B\x4F\x46", end_of_buffer);
 	set_key_internal("esc-home",  "beginning-of-buffer" , "\x1B\x1B\x4F\x48", beginning_of_buffer);
 	set_key_internal("esc-@",     "set-mark"            , "\x1B\x40", i_set_mark);
 	set_key_internal("esc-<",     "beginning-of-buffer" , "\x1B\x3C", beginning_of_buffer);
 	set_key_internal("esc->",     "end-of-buffer"       , "\x1B\x3E", end_of_buffer);
-	set_key_internal("esc-]",     "eval-block"          , "\x1B\x5D", eval_block);
-	set_key_internal("esc-;",     "exec-lisp-command"   , "\x1B\x3B", repl);
-	set_key_internal("esc-.",     "user-func"           , "\x1B\x2E", user_func);
-
 	set_key_internal("up ",       "previous-line",        "\x1B\x5B\x41", up);
 	set_key_internal("down",      "next-line",            "\x1B\x5B\x42", down);
 	set_key_internal("left",      "backward-char",        "\x1B\x5B\x44", left);
@@ -197,18 +188,13 @@ void setup_keys()
 	set_key_internal("c-x 1",     "delete-other-windows"  , "\x18\x31", delete_other_windows);
 	set_key_internal("c-x 2",     "split-window"          , "\x18\x32", split_window);
 	set_key_internal("c-x =",     "cursor-position"       , "\x18\x3D", cursor_position);
-	set_key_internal("c-x ?",     "user-func"             , "\x18\x3F", user_func);
 	set_key_internal("c-x b",     "list-buffers"          , "\x18\x62", list_buffers);
 	set_key_internal("c-x i",     "insert-file"           , "\x18\x69", insertfile);
 	set_key_internal("c-x k",     "kill-buffer"           , "\x18\x6B", kill_buffer);
 	set_key_internal("c-x n",     "next-buffer"           , "\x18\x6E", next_buffer);
 	set_key_internal("c-x o",     "other-window"          , "\x18\x6F", other_window);
 	set_key_internal("c-x @",     "shell-command"         , "\x18\x40", i_shell_command);
-	set_key_internal("c-x (",     "user-func"             , "\x18\x28", user_func);
-	set_key_internal("c-x )",     "user-func"             , "\x18\x29", user_func);
-	set_key_internal("c-x `",     "user-func"             , "\x18\x60", user_func);
 	set_key_internal("c-space",   "set-mark"              , "\x00", i_set_mark);
-	set_key_internal("c-]",       "user-func"             , "\x1D", user_func);
 	set_key_internal("c-_",       "undo"                  , "\x1F", undo_command);
 	set_key_internal("resize",     "resize"               , "\x9A", resize_terminal);
 

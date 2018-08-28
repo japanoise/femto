@@ -772,62 +772,6 @@ point_t get_point_max()
 	return pos(curbp, curbp->b_ebuf);
 }
 
-/*
- * execute a lisp command type in atthe command prompt >
- * send any outout to the message line.  This avoids text
- * being sent to the current buffer which means the file
- * contents could get corrupted if you are running commands
- * on the buffers etc.
- *
- * If the output is too big for the message line then send it to
- * a temp buffer called *list_output* and popup the window
- *
- */
-void repl()
-{
-	char *output;
-	buffer_t *bp;
-
-	reset_output_stream();
-
-	if (getinput("> ", response_buf, TEMPBUF, F_CLEAR)) {
-		output = call_lisp(response_buf);
-
-		if (strlen(output) < 60) {
-			msg(output);
-		} else {
-			bp = find_buffer("*lisp_output*", TRUE);
-			append_string(bp, output);
-			(void)popup_window(bp->b_bname);
-		}
-	}
-
-	reset_output_stream();
-}
-
-/*
- * evaluate a block between mark and point
- */
-void eval_block()
-{
-	char *output;
-
-	if (curbp->b_mark == NOMARK || curbp->b_mark >= curbp->b_point) {
-		msg("no block defined");
-		return;
-	}
-
-	copy_region();
-	assert(scrap != NULL);
-	assert(strlen(scrap) > 0);
-
-	reset_output_stream();
-	output = call_lisp((char *)scrap);
-	insert_string("\n");
-	insert_string(output);
-	reset_output_stream();
-}
-
 /* thanks atto :) */
 void kill_to_eol()
 {
@@ -851,30 +795,4 @@ void kill_to_bol()
 		lnbegin();
 		if (curbp->b_mark != curbp->b_point) copy_cut(TRUE);
 	}
-}
-
-/* this is called for every user key setup by a call to set_key */
-void user_func()
-{
-	char *output;
-	char funcname[80];
-
-	assert(key_return != NULL);
-	if (0 == strcmp(key_return->k_funcname, E_NOT_BOUND)) {
-		msg(E_NOT_BOUND);
-		return;
-	}
-
-	reset_output_stream();
-	sprintf(funcname, "(%s)", key_return->k_funcname);
-	output = call_lisp(funcname);
-
-	/* show errors on message line */
-	if (NULL != strstr(output, "error:")) {
-		char buf[81];
-		strncpy(buf, output, 80);
-		buf[80] ='\0';
-		msg(buf);
-	}
-	reset_output_stream();
 }

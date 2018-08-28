@@ -360,22 +360,7 @@ void execute_command()
 	if (strlen(command_name) > 0) {
 		funct = name_to_function(command_name);
 
-		if (funct == NULL || funct == user_func) {
-			char funcname[80];
-			reset_output_stream();
-			sprintf(funcname, "(%s)", command_name);
-			char *output = call_lisp(funcname);
-
-			/* show errors on message line */
-			/* can probably make this a common function */                
-			if (NULL != strstr(output, "error:")) {
-				char buf[81];
-				strncpy(buf, output, 80);
-				buf[80] ='\0';
-				msg(buf);
-			}	
-			reset_output_stream();
-		} else {
+		if (funct != NULL) {
 			(funct)();
 		}
 	}
